@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers/app_providers.dart';
@@ -38,6 +39,7 @@ class AddTransactionSheet extends ConsumerStatefulWidget {
 
 class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   final TextEditingController _noteController = TextEditingController();
+  final TextEditingController _adminFeeController = TextEditingController();
 
   TransactionType _type = TransactionType.expense;
   String _amountDigits = '';
@@ -52,6 +54,11 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   bool _saving = false;
 
   int get _amount => int.tryParse(_amountDigits) ?? 0;
+
+  int get _adminFee => int.tryParse(_adminFeeController.text) ?? 0;
+
+  bool get _showsAdminFee =>
+      _type == TransactionType.transfer && widget.transaction == null;
 
   Color get _accentColor {
     switch (_type) {
@@ -95,6 +102,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   @override
   void dispose() {
     _noteController.dispose();
+    _adminFeeController.dispose();
     super.dispose();
   }
 
@@ -232,6 +240,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             transferWalletId: _toWalletId,
             date: _selectedDate,
             note: _noteController.text,
+            adminFee: _showsAdminFee ? _adminFee : 0,
           );
 
       if (!mounted) return;
@@ -417,6 +426,14 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                                 });
                               },
                             ),
+                          if (_showsAdminFee) ...[
+                            const SizedBox(height: AppSpacing.xxxl),
+                            _AdminFeeField(
+                              controller: _adminFeeController,
+                              transferAmount: _amount,
+                              onChanged: () => setState(() {}),
+                            ),
+                          ],
                           if (_type != TransactionType.transfer) ...[
                             const SizedBox(height: AppSpacing.xxxl),
                             _WalletPicker(
@@ -731,6 +748,78 @@ class _TransferFields extends StatelessWidget {
           selectedWalletId: toWalletId,
           onSelected: onToSelected,
         ),
+      ],
+    );
+  }
+}
+
+class _AdminFeeField extends StatelessWidget {
+  const _AdminFeeField({
+    required this.controller,
+    required this.transferAmount,
+    required this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final int transferAmount;
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.colorScheme.brightness == Brightness.dark;
+    final fee = int.tryParse(controller.text) ?? 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SheetSectionTitle(
+          title: 'Biaya admin',
+          subtitle: 'Opsional. Dipotong dari dompet asal sebagai pengeluaran.',
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(9),
+          ],
+          onChanged: (_) => onChanged(),
+          cursorColor: theme.colorScheme.primary,
+          style: theme.textTheme.bodyLarge,
+          decoration: InputDecoration(
+            prefixText: 'Rp ',
+            hintText: '0',
+            hintStyle: theme.textTheme.bodyMedium,
+            filled: true,
+            fillColor: isDark
+                ? AppColors.darkSurfaceSoft
+                : AppColors.surfaceSoft,
+            contentPadding: const EdgeInsets.all(AppSpacing.lg),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: AppRadius.input,
+              borderSide: BorderSide(
+                color: isDark
+                    ? AppColors.darkBorderSubtle
+                    : AppColors.borderSubtle,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: AppRadius.input,
+              borderSide: BorderSide(
+                color: theme.colorScheme.primary.withValues(alpha: 0.46),
+              ),
+            ),
+          ),
+        ),
+        if (fee > 0 && transferAmount > 0) ...[
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Total keluar dari dompet asal: ${CurrencyFormatter.rupiah(transferAmount + fee)}',
+            style: theme.textTheme.labelMedium,
+          ),
+        ],
       ],
     );
   }

@@ -91,6 +91,15 @@ class MonthlyReportBuilder {
 
     final expenseCategories = _categoryTotals(expenses);
     final incomeCategories = _categoryTotals(incomes);
+    final expenseGroups = _groupTotals(expenses);
+    final incomeGroups = _groupTotals(incomes);
+
+    final inProgress = isCurrentMonth && today.day < daysInMonth;
+    final comparable = inProgress
+        ? previous.where((item) => item.transaction.date.day <= today.day)
+        : previous;
+    final previousIncomeComparable = _sum(comparable, TransactionType.income);
+    final previousExpenseComparable = _sum(comparable, TransactionType.expense);
 
     final weekCount = (daysInMonth / 7).ceil();
     final weeklyExpense = List<int>.filled(weekCount, 0);
@@ -127,7 +136,7 @@ class MonthlyReportBuilder {
             expense: expense,
             previousExpense: previousExpense,
             averageDailyExpense: averageDailyExpense,
-            inProgress: isCurrentMonth && today.day < daysInMonth,
+            inProgress: inProgress,
             expenseCategories: expenseCategories,
             expenses: expenses,
             // Budget berlaku untuk semua dompet, jadi dilewati saat difilter.
@@ -141,11 +150,16 @@ class MonthlyReportBuilder {
       expense: expense,
       previousIncome: previousIncome,
       previousExpense: previousExpense,
+      previousIncomeComparable: previousIncomeComparable,
+      previousExpenseComparable: previousExpenseComparable,
+      inProgress: inProgress,
       averageDailyExpense: averageDailyExpense,
       averageDailyIncome: averageDailyIncome,
       daysCounted: daysCounted,
       expenseCategories: expenseCategories,
       incomeCategories: incomeCategories,
+      expenseGroups: expenseGroups,
+      incomeGroups: incomeGroups,
       weeklyExpense: weeklyExpense,
       weeklyIncome: weeklyIncome,
       dayActivity: dayActivity,
@@ -186,6 +200,36 @@ class MonthlyReportBuilder {
           amount: entry.value,
           colorValue: category?.colorValue ?? 0xFF64748B,
           count: counts[entry.key] ?? 0,
+        ),
+      );
+    }
+    totals.sort((a, b) => b.amount.compareTo(a.amount));
+    return totals;
+  }
+
+  static List<MonthlyCategoryTotal> _groupTotals(
+    List<TransactionDetail> items,
+  ) {
+    final amounts = <String, int>{};
+    final counts = <String, int>{};
+    final colors = <String, int>{};
+    for (final item in items) {
+      final category = item.category;
+      final key = category?.groupName ?? 'Tanpa kategori';
+      amounts[key] = (amounts[key] ?? 0) + item.transaction.amount;
+      counts[key] = (counts[key] ?? 0) + 1;
+      colors[key] ??= category?.colorValue ?? 0xFF64748B;
+    }
+
+    final totals = <MonthlyCategoryTotal>[];
+    for (final entry in amounts.entries) {
+      totals.add(
+        MonthlyCategoryTotal(
+          label: entry.key,
+          amount: entry.value,
+          colorValue: colors[entry.key] ?? 0xFF64748B,
+          count: counts[entry.key] ?? 0,
+          isGroup: true,
         ),
       );
     }

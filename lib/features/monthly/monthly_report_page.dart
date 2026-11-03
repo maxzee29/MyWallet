@@ -26,6 +26,7 @@ import 'widgets/monthly_summary_carousel.dart';
 import 'widgets/monthly_transaction_actions.dart';
 import 'widgets/monthly_transaction_widgets.dart';
 import 'widgets/monthly_trend_chart.dart';
+import 'widgets/monthly_type_overview.dart';
 
 class MonthlyReportPage extends ConsumerStatefulWidget {
   const MonthlyReportPage({super.key});
@@ -56,6 +57,7 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
   int _tabIndex = 0;
   int _filterIndex = 0;
   String _query = '';
+  bool _groupByGroup = false;
 
   @override
   void dispose() {
@@ -268,18 +270,42 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
       ];
     }
 
-    final count = data.transactions.where((item) => item.type == type).length;
-    final average = isIncome
-        ? data.averageDailyIncome
-        : data.averageDailyExpense;
+    final items = _groupByGroup
+        ? (isIncome ? data.incomeGroups : data.expenseGroups)
+        : categories;
 
     return [
-      _TypeSummaryCard(
-        label: isIncome ? 'Total pemasukan' : 'Total pengeluaran',
-        total: CurrencyFormatter.rupiah(total, hidden: hideBalance),
-        color: isIncome ? AppColors.incomeGreen : AppColors.expenseRed,
-        detail:
-            '$count transaksi · rata-rata ${CurrencyFormatter.rupiah(average, hidden: hideBalance)} per hari',
+      MonthlyTotalCard(
+        label: isIncome ? 'Total Pemasukan' : 'Total Pengeluaran',
+        icon: isIncome ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+        colors: isIncome
+            ? const [AppColors.incomeGreen, Color(0xFF166534)]
+            : const [AppColors.expenseRed, Color(0xFF991B1B)],
+        current: total,
+        previous: isIncome
+            ? data.previousIncomeComparable
+            : data.previousExpenseComparable,
+        inProgress: data.inProgress,
+        hideBalance: hideBalance,
+      ),
+      const SizedBox(height: AppSpacing.lg),
+      MonthlyGroupToggle(
+        value: _groupByGroup,
+        onChanged: (value) => setState(() => _groupByGroup = value),
+      ),
+      const SizedBox(height: AppSpacing.xl),
+      Center(
+        child: Text(
+          'Ketuk untuk melihat detail',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
+      const SizedBox(height: AppSpacing.md),
+      MonthlyDonutCard(
+        items: items,
+        total: total,
+        hideBalance: hideBalance,
+        onTap: (item) => _showCategory(data, item, type, hideBalance),
       ),
       const SizedBox(height: AppSpacing.xxl),
       MonthlyTrendChart(
@@ -289,10 +315,10 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
       ),
       const SizedBox(height: AppSpacing.xxl),
       MonthlyCategoryBreakdown(
-        title: isIncome ? 'Pemasukan per kategori' : 'Pengeluaran per kategori',
+        title: _groupByGroup ? 'Detail per Grup' : 'Detail per Kategori',
         icon: isIncome ? Icons.trending_up_rounded : Icons.trending_down_rounded,
         accent: isIncome ? AppColors.incomeGreen : AppColors.expenseRed,
-        items: categories,
+        items: items,
         total: total,
         hideBalance: hideBalance,
         onTap: (item) => _showCategory(data, item, type, hideBalance),
@@ -396,13 +422,13 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
     TransactionType type,
     bool hideBalance,
   ) {
-    final items = data.transactions
-        .where(
-          (item) =>
-              item.type == type &&
-              (item.category?.id ?? -1) == (total.category?.id ?? -1),
-        )
-        .toList();
+    final items = data.transactions.where((item) {
+      if (item.type != type) return false;
+      if (total.isGroup) {
+        return (item.category?.groupName ?? 'Tanpa kategori') == total.label;
+      }
+      return (item.category?.id ?? -1) == (total.category?.id ?? -1);
+    }).toList();
 
     showMonthlyTransactionsSheet(
       context,

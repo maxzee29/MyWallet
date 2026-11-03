@@ -78,9 +78,13 @@ class TransactionRepository {
     int? transferWalletId,
     required DateTime date,
     String? note,
+    int adminFee = 0,
   }) async {
     if (amount <= 0) {
       throw ArgumentError('Masukkan nominal terlebih dahulu.');
+    }
+    if (adminFee < 0) {
+      throw ArgumentError('Biaya admin tidak valid.');
     }
     if (type != TransactionType.transfer && categoryId == null) {
       throw ArgumentError('Pilih kategori terlebih dahulu.');
@@ -113,11 +117,53 @@ class TransactionRepository {
       updatedAt: Value(now),
     );
 
-    if (id == null) {
-      await _database.transactionsDao.add(companion);
-    } else {
-      await _database.transactionsDao.updateEntry(companion);
+    await _database.transaction(() async {
+      if (id == null) {
+        await _database.transactionsDao.add(companion);
+      } else {
+        await _database.transactionsDao.updateEntry(companion);
+      }
+
+      // Biaya admin hanya dicatat untuk transfer baru, sebagai pengeluaran
+      // terpisah dari dompet asal agar ikut terhitung di laporan.
+      if (id == null && type == TransactionType.transfer && adminFee > 0) {
+        final feeCategoryId = await _adminFeeCategoryId(now);
+        await _database.transactionsDao.add(
+          TransactionEntriesCompanion(
+            type: Value(TransactionType.expense.value),
+            amount: Value(adminFee),
+            categoryId: Value(feeCategoryId),
+            walletId: Value(walletId),
+            date: Value(date),
+            note: const Value('Biaya admin transfer'),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
+      }
+    });
+  }
+
+  Future<int> _adminFeeCategoryId(DateTime now) async {
+    final categories = await _database.categoriesDao.getAll();
+    for (final category in categories) {
+      final isExpense = category.type == 'expense' || category.type == 'both';
+      if (category.name == 'Biaya Admin' && isExpense && !category.isArchived) {
+        return category.id;
+      }
     }
+
+    return _database.categoriesDao.add(
+      CategoryEntriesCompanion.insert(
+        name: 'Biaya Admin',
+        type: 'expense',
+        groupName: 'Keuangan',
+        iconKey: 'admin-fee',
+        colorValue: 0xFF2563EB,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
   }
 
   Future<void> delete(int id) async {

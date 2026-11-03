@@ -261,4 +261,30 @@ void main() {
       expect(insight.message, isNot(contains('1.000.000')));
     }
   });
+
+  test('groups combine categories by their group name', () {
+    final report = build();
+
+    expect(report.expenseGroups.single.label, 'Harian');
+    expect(report.expenseGroups.single.amount, 300000);
+    expect(report.expenseGroups.single.isGroup, isTrue);
+    expect(report.incomeGroups.single.label, 'Tanpa kategori');
+  });
+
+  test('running month compares against the same days of last month', () {
+    final early = build(now: DateTime(2026, 11, 10));
+    final later = build(now: DateTime(2026, 11, 25));
+
+    expect(early.inProgress, isTrue);
+    expect(early.previousExpense, 100000);
+    expect(early.previousExpenseComparable, 0);
+    expect(later.previousExpenseComparable, 100000);
+  });
+
+  test('finished month compares against the whole previous month', () {
+    final report = build();
+
+    expect(report.inProgress, isFalse);
+    expect(report.previousExpenseComparable, 100000);
+  });
 }

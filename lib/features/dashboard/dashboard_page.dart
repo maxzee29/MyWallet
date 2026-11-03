@@ -15,6 +15,7 @@ import '../../shared/components/insight_card.dart';
 import '../../shared/components/section_header.dart';
 import '../../shared/helpers/category_icon_mapper.dart';
 import '../../shared/widgets/empty_state.dart';
+import '../monthly/monthly_report_page.dart';
 import '../transactions/widgets/transaction_tile.dart';
 
 class DashboardPage extends ConsumerWidget {
@@ -63,9 +64,11 @@ class DashboardPage extends ConsumerWidget {
                       },
                     ),
                     const SizedBox(height: AppSpacing.xxl),
-                    const SectionHeader(
+                    SectionHeader(
                       title: 'Ringkasan bulan ini',
                       subtitle: 'Bulan berjalan',
+                      actionLabel: 'Laporan',
+                      onAction: () => MonthlyReportPage.open(context),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _MonthlySnapshotCard(

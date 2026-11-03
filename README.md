@@ -5,50 +5,6 @@
 <h1 align="center">MyWallet</h1>
 
 <p align="center">
-  Offline-first personal finance tracker for Android.
-</p>
-
-<p align="center">
-  FadDompet helps users track income, expenses, wallets, budgets, backups, and app updates locally on their device.
-</p>
-
-<p align="center">
-  <a href="https://github.com/fadd3079-prog/faddompet/actions/workflows/flutter-ci.yml"><img alt="Flutter CI" src="https://img.shields.io/github/actions/workflow/status/fadd3079-prog/faddompet/flutter-ci.yml?branch=main&style=flat-square&label=Flutter%20CI"></a>
-  <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.x-02569B?style=flat-square&logo=flutter&logoColor=white">
-  <img alt="Android" src="https://img.shields.io/badge/Android-primary-3DDC84?style=flat-square&logo=android&logoColor=white">
-  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/License-MIT-blue?style=flat-square"></a>
-  <a href="https://github.com/fadd3079-prog/faddompet/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/fadd3079-prog/faddompet?style=flat-square"></a>
-  <img alt="Offline first" src="https://img.shields.io/badge/Offline-first-0F766E?style=flat-square">
-</p>
-
-## Screenshots
-
-<p align="center">
-  <img width="180" alt="FadDompet dashboard" src="docs/screenshots/dashboard.webp" />
-  <img width="180" alt="FadDompet app lock" src="docs/screenshots/app-lock.webp" />
-  <img width="180" alt="FadDompet add transaction" src="docs/screenshots/add-transaction.webp" />
-  <img width="180" alt="FadDompet wallets" src="docs/screenshots/wallets.webp" />
-</p>
-
-<p align="center">
-  <img width="180" alt="FadDompet transactions" src="docs/screenshots/transactions.webp" />
-  <img width="180" alt="FadDompet settings" src="docs/screenshots/settings.webp" />
-  <img width="180" alt="FadDompet analytics" src="docs/screenshots/analytics.webp" />
-</p>
-
-## Features
-
-- Income and expense tracking
-- Wallet management
-- Transfer between wallets
-- Monthly budgets
-<p align="center">
-  <img src="assets/icons/app_icon.png" width="96" alt="FadDompet logo">
-</p>
-
-<h1 align="center">MyWallet</h1>
-
-<p align="center">
   Aplikasi money management offline ringan untuk Android.
 </p>
 

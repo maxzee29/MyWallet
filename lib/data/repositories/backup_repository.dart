@@ -16,7 +16,7 @@ class BackupRepository {
   Future<String> exportJson() async {
     final payload = await _backupPayload();
     final name =
-        'faddompet-backup-${DateTime.now().millisecondsSinceEpoch}.json';
+        'mywallet-backup-${DateTime.now().millisecondsSinceEpoch}.json';
     final file = _xFile(
       name: name,
       content: const JsonEncoder.withIndent('  ').convert(payload),
@@ -25,7 +25,7 @@ class BackupRepository {
     await SharePlus.instance.share(
       ShareParams(
         files: [file],
-        text: 'Cadangan FadDompet. Simpan file ini di tempat yang aman.',
+        text: 'Cadangan MyWallet. Simpan file ini di tempat yang aman.',
       ),
     );
     return name;
@@ -65,14 +65,14 @@ class BackupRepository {
     ];
 
     final name =
-        'faddompet-transaksi-${DateTime.now().millisecondsSinceEpoch}.csv';
+        'mywallet-transaksi-${DateTime.now().millisecondsSinceEpoch}.csv';
     final file = _xFile(
       name: name,
       content: csv.encode(rows),
       mimeType: 'text/csv',
     );
     await SharePlus.instance.share(
-      ShareParams(files: [file], text: 'CSV transaksi FadDompet'),
+      ShareParams(files: [file], text: 'CSV transaksi MyWallet'),
     );
     return name;
   }

@@ -12,7 +12,7 @@ class AppBrandMark extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       image: true,
-      label: 'FadDompet',
+      label: 'MyWallet',
       child: Container(
         width: size,
         height: size,

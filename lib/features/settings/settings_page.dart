@@ -162,7 +162,7 @@ class SettingsPage extends ConsumerWidget {
           ),
           _SettingsTile(
             icon: Icons.info_rounded,
-            title: 'Tentang FadDompet',
+            title: 'Tentang MyWallet',
             subtitle: aboutSubtitle,
             onTap: () => _showAboutSheet(context, versionLabel),
           ),
@@ -229,7 +229,7 @@ class SettingsPage extends ConsumerWidget {
                     const _SheetHeader(
                       title: 'Keamanan',
                       subtitle:
-                          'Kunci FadDompet dengan PIN. Biometrik tetap punya PIN cadangan.',
+                          'Kunci MyWallet dengan PIN. Biometrik tetap punya PIN cadangan.',
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     if (settings.pinEnabled) ...[
@@ -427,7 +427,7 @@ class SettingsPage extends ConsumerWidget {
               _SheetOption(
                 icon: Icons.restore_rounded,
                 title: 'Pulihkan dari Cadangan',
-                subtitle: 'Impor file cadangan FadDompet dari perangkat lama.',
+                subtitle: 'Impor file cadangan dari perangkat lama.',
                 onTap: () => _startImport(context, ref),
               ),
               _SheetOption(
@@ -617,7 +617,7 @@ class SettingsPage extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'FadDompet',
+                          'MyWallet',
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: AppSpacing.xs),

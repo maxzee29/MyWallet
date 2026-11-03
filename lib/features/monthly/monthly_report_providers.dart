@@ -27,12 +27,36 @@ class ReportMonthController extends Notifier<DateTime> {
     if (candidate.isAfter(current)) return;
     state = candidate;
   }
+
+  void select(DateTime month) {
+    final current = DateFormatter.startOfMonth(DateTime.now());
+    final candidate = DateTime(month.year, month.month);
+    state = candidate.isAfter(current) ? current : candidate;
+  }
+}
+
+/// Dompet yang dipilih pada laporan. `null` berarti semua dompet.
+final reportWalletProvider =
+    NotifierProvider.autoDispose<ReportWalletController, int?>(
+      ReportWalletController.new,
+    );
+
+class ReportWalletController extends Notifier<int?> {
+  @override
+  int? build() {
+    return null;
+  }
+
+  void select(int? walletId) {
+    state = walletId;
+  }
 }
 
 final monthlyReportProvider = Provider.autoDispose<AsyncValue<MonthlyReport>>((
   ref,
 ) {
   final month = ref.watch(reportMonthProvider);
+  final walletId = ref.watch(reportWalletProvider);
   final transactions = ref.watch(transactionDetailsProvider);
   final budgets = ref
       .watch(budgetProgressProvider)
@@ -52,6 +76,7 @@ final monthlyReportProvider = Provider.autoDispose<AsyncValue<MonthlyReport>>((
       month: month,
       transactions: items,
       budgets: budgets,
+      walletId: walletId,
       hideAmounts: hideAmounts,
     ),
   );

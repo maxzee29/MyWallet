@@ -2,6 +2,12 @@
 
 All notable changes to FadDompet are documented in this file.
 
+## [Unreleased]
+
+- Added Monthly Report page: per-month insights, summary cards, weekly trend chart, category breakdown with details, activity calendar, wallet filter, and a month-by-month record list.
+- Renamed the app to MyWallet and changed the Android application id so it installs next to the original app.
+- CI now builds split and universal APKs and can sign with a fixed keystore from the MYWALLET_KEYSTORE_B64 secret.
+
 ## [1.3.0] - 2026-07-03
 
 - Improved Analytics period filtering.

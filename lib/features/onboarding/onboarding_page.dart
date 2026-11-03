@@ -76,7 +76,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   ),
                   const SizedBox(height: AppSpacing.xxl),
                   Text(
-                    'Selamat datang di FadDompet',
+                    'Selamat datang di MyWallet',
                     style: theme.textTheme.displayMedium,
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -108,7 +108,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   FilledButton(
                     onPressed: _saving ? null : () => _finish(items),
                     child: Text(
-                      _saving ? 'Menyiapkan...' : 'Mulai Pakai FadDompet',
+                      _saving ? 'Menyiapkan...' : 'Mulai Pakai MyWallet',
                     ),
                   ),
                 ],
@@ -141,7 +141,7 @@ class _NameField extends StatelessWidget {
       decoration: const InputDecoration(
         labelText: 'Nama pengguna',
         hintText: 'Contoh: Rina',
-        helperText: 'Nama ini hanya dipakai untuk menyapa kamu di FadDompet.',
+        helperText: 'Nama ini hanya dipakai untuk menyapa kamu di MyWallet.',
       ),
     );
   }

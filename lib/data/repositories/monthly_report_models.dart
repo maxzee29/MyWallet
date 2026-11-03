@@ -1,3 +1,4 @@
+import '../local/database/app_database.dart';
 import 'app_models.dart';
 
 enum MonthlyInsightTone { positive, neutral, warning }
@@ -14,6 +15,36 @@ class MonthlyInsight {
   final MonthlyInsightTone tone;
 }
 
+class MonthlyCategoryTotal {
+  const MonthlyCategoryTotal({
+    required this.label,
+    required this.amount,
+    required this.colorValue,
+    required this.count,
+    this.category,
+  });
+
+  final CategoryEntry? category;
+  final String label;
+  final int amount;
+  final int colorValue;
+  final int count;
+}
+
+class MonthlyDayActivity {
+  const MonthlyDayActivity({
+    this.income = 0,
+    this.expense = 0,
+    this.transfer = 0,
+    this.count = 0,
+  });
+
+  final int income;
+  final int expense;
+  final int transfer;
+  final int count;
+}
+
 class MonthlyReport {
   const MonthlyReport({
     required this.month,
@@ -22,10 +53,17 @@ class MonthlyReport {
     required this.previousIncome,
     required this.previousExpense,
     required this.averageDailyExpense,
-    required this.expenseByCategory,
+    required this.averageDailyIncome,
+    required this.daysCounted,
+    required this.expenseCategories,
+    required this.incomeCategories,
+    required this.weeklyExpense,
+    required this.weeklyIncome,
+    required this.dayActivity,
     required this.transactions,
     required this.insights,
     required this.hasEarlierData,
+    required this.availableMonths,
   });
 
   final DateTime month;
@@ -34,10 +72,17 @@ class MonthlyReport {
   final int previousIncome;
   final int previousExpense;
   final int averageDailyExpense;
-  final List<CategoryAmount> expenseByCategory;
+  final int averageDailyIncome;
+  final int daysCounted;
+  final List<MonthlyCategoryTotal> expenseCategories;
+  final List<MonthlyCategoryTotal> incomeCategories;
+  final List<int> weeklyExpense;
+  final List<int> weeklyIncome;
+  final Map<int, MonthlyDayActivity> dayActivity;
   final List<TransactionDetail> transactions;
   final List<MonthlyInsight> insights;
   final bool hasEarlierData;
+  final List<DateTime> availableMonths;
 
   int get net => income - expense;
 

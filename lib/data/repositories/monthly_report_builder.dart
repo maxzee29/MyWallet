@@ -3,6 +3,7 @@ import '../../core/enums/transaction_type.dart';
 import '../../core/formatters/currency_formatter.dart';
 import '../../core/formatters/date_formatter.dart';
 import '../../core/formatters/report_date_formatter.dart';
+import '../local/database/app_database.dart';
 import 'app_models.dart';
 import 'monthly_report_models.dart';
 
@@ -17,6 +18,7 @@ class MonthlyReportBuilder {
     required DateTime month,
     required List<TransactionDetail> transactions,
     required List<BudgetProgress> budgets,
+    int? walletId,
     DateTime? now,
     bool hideAmounts = false,
   }) {
@@ -24,15 +26,35 @@ class MonthlyReportBuilder {
     final start = DateFormatter.startOfMonth(month);
     final end = DateTime(start.year, start.month + 1);
     final previousStart = DateTime(start.year, start.month - 1);
+    final currentMonthStart = DateFormatter.startOfMonth(today);
+
+    // Navigasi bulan memakai semua data, tidak terpengaruh filter dompet.
+    final monthSet = <DateTime>{currentMonthStart, start};
+    var hasEarlierData = false;
+    for (final item in transactions) {
+      final date = item.transaction.date;
+      final itemMonth = DateTime(date.year, date.month);
+      if (!itemMonth.isAfter(currentMonthStart)) monthSet.add(itemMonth);
+      if (date.isBefore(start)) hasEarlierData = true;
+    }
+    final availableMonths = monthSet.toList();
+    availableMonths.sort((a, b) => b.compareTo(a));
+
+    final scoped = walletId == null
+        ? transactions
+        : transactions
+              .where(
+                (item) =>
+                    item.transaction.walletId == walletId ||
+                    item.transaction.transferWalletId == walletId,
+              )
+              .toList();
 
     final current = <TransactionDetail>[];
     final previous = <TransactionDetail>[];
-    var hasEarlierData = false;
-
-    for (final item in transactions) {
+    for (final item in scoped) {
       final date = item.transaction.date;
       if (date.isBefore(start)) {
-        hasEarlierData = true;
         if (!date.isBefore(previousStart)) previous.add(item);
       } else if (date.isBefore(end)) {
         current.add(item);
@@ -48,6 +70,9 @@ class MonthlyReportBuilder {
     final expenses = current
         .where((item) => item.type == TransactionType.expense)
         .toList();
+    final incomes = current
+        .where((item) => item.type == TransactionType.income)
+        .toList();
     final income = _sum(current, TransactionType.income);
     final expense = _sum(current, TransactionType.expense);
     final previousIncome = _sum(previous, TransactionType.income);
@@ -60,8 +85,39 @@ class MonthlyReportBuilder {
     final averageDailyExpense = daysCounted > 0
         ? (expense / daysCounted).round()
         : 0;
+    final averageDailyIncome = daysCounted > 0
+        ? (income / daysCounted).round()
+        : 0;
 
-    final expenseByCategory = _expenseByCategory(expenses);
+    final expenseCategories = _categoryTotals(expenses);
+    final incomeCategories = _categoryTotals(incomes);
+
+    final weekCount = (daysInMonth / 7).ceil();
+    final weeklyExpense = List<int>.filled(weekCount, 0);
+    final weeklyIncome = List<int>.filled(weekCount, 0);
+    final dayActivity = <int, MonthlyDayActivity>{};
+    for (final item in current) {
+      final day = item.transaction.date.day;
+      final amount = item.transaction.amount;
+      final type = item.type;
+      final bucket = (day - 1) ~/ 7;
+      if (type == TransactionType.expense) weeklyExpense[bucket] += amount;
+      if (type == TransactionType.income) weeklyIncome[bucket] += amount;
+
+      final existing = dayActivity[day];
+      dayActivity[day] = MonthlyDayActivity(
+        income:
+            (existing?.income ?? 0) +
+            (type == TransactionType.income ? amount : 0),
+        expense:
+            (existing?.expense ?? 0) +
+            (type == TransactionType.expense ? amount : 0),
+        transfer:
+            (existing?.transfer ?? 0) +
+            (type == TransactionType.transfer ? amount : 0),
+        count: (existing?.count ?? 0) + 1,
+      );
+    }
 
     final insights = income == 0 && expense == 0
         ? const <MonthlyInsight>[]
@@ -72,9 +128,10 @@ class MonthlyReportBuilder {
             previousExpense: previousExpense,
             averageDailyExpense: averageDailyExpense,
             inProgress: isCurrentMonth && today.day < daysInMonth,
-            expenseByCategory: expenseByCategory,
+            expenseCategories: expenseCategories,
             expenses: expenses,
-            budgets: budgets,
+            // Budget berlaku untuk semua dompet, jadi dilewati saat difilter.
+            budgets: walletId == null ? budgets : const <BudgetProgress>[],
             hideAmounts: hideAmounts,
           );
 
@@ -85,10 +142,17 @@ class MonthlyReportBuilder {
       previousIncome: previousIncome,
       previousExpense: previousExpense,
       averageDailyExpense: averageDailyExpense,
-      expenseByCategory: expenseByCategory,
+      averageDailyIncome: averageDailyIncome,
+      daysCounted: daysCounted,
+      expenseCategories: expenseCategories,
+      incomeCategories: incomeCategories,
+      weeklyExpense: weeklyExpense,
+      weeklyIncome: weeklyIncome,
+      dayActivity: dayActivity,
       transactions: current,
       insights: insights,
       hasEarlierData: hasEarlierData,
+      availableMonths: availableMonths,
     );
   }
 
@@ -98,24 +162,35 @@ class MonthlyReportBuilder {
         .fold<int>(0, (total, item) => total + item.transaction.amount);
   }
 
-  static List<CategoryAmount> _expenseByCategory(
-    List<TransactionDetail> expenses,
+  static List<MonthlyCategoryTotal> _categoryTotals(
+    List<TransactionDetail> items,
   ) {
-    final byCategory = <int, CategoryAmount>{};
-    for (final item in expenses) {
+    final amounts = <int, int>{};
+    final counts = <int, int>{};
+    final categories = <int, CategoryEntry?>{};
+    for (final item in items) {
       final category = item.category;
       final key = category?.id ?? -1;
-      final existing = byCategory[key];
-      byCategory[key] = CategoryAmount(
-        label: category?.name ?? 'Tanpa kategori',
-        amount: (existing?.amount ?? 0) + item.transaction.amount,
-        colorValue: category?.colorValue ?? 0xFF64748B,
-      );
+      amounts[key] = (amounts[key] ?? 0) + item.transaction.amount;
+      counts[key] = (counts[key] ?? 0) + 1;
+      categories[key] = category;
     }
 
-    final items = byCategory.values.toList();
-    items.sort((a, b) => b.amount.compareTo(a.amount));
-    return items;
+    final totals = <MonthlyCategoryTotal>[];
+    for (final entry in amounts.entries) {
+      final category = categories[entry.key];
+      totals.add(
+        MonthlyCategoryTotal(
+          category: category,
+          label: category?.name ?? 'Tanpa kategori',
+          amount: entry.value,
+          colorValue: category?.colorValue ?? 0xFF64748B,
+          count: counts[entry.key] ?? 0,
+        ),
+      );
+    }
+    totals.sort((a, b) => b.amount.compareTo(a.amount));
+    return totals;
   }
 
   static List<MonthlyInsight> _insights({
@@ -125,7 +200,7 @@ class MonthlyReportBuilder {
     required int previousExpense,
     required int averageDailyExpense,
     required bool inProgress,
-    required List<CategoryAmount> expenseByCategory,
+    required List<MonthlyCategoryTotal> expenseCategories,
     required List<TransactionDetail> expenses,
     required List<BudgetProgress> budgets,
     required bool hideAmounts,
@@ -263,8 +338,8 @@ class MonthlyReportBuilder {
     }
 
     // 4. Kategori terbesar.
-    if (expense > 0 && expenseByCategory.isNotEmpty) {
-      final top = expenseByCategory.first;
+    if (expense > 0 && expenseCategories.isNotEmpty) {
+      final top = expenseCategories.first;
       final share = (top.amount / expense * 100).round();
       insights.add(
         MonthlyInsight(

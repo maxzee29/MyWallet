@@ -19,7 +19,7 @@ class FadDompetApp extends ConsumerWidget {
         .maybeWhen(data: (value) => value, orElse: () => null);
 
     return MaterialApp(
-      title: 'FadDompet',
+      title: 'MyWallet',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
@@ -79,7 +79,7 @@ class _AppGate extends ConsumerWidget {
           error: (_, _) => const OnboardingPage(),
         );
       },
-      loading: () => const LoadingState(message: 'Menyiapkan FadDompet'),
+      loading: () => const LoadingState(message: 'Menyiapkan MyWallet'),
       error: (_, _) => const LoadingState(message: 'Data belum bisa dimuat'),
     );
   }

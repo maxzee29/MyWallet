@@ -37,7 +37,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.faddgraphics.faddompet"
+        applicationId = "com.mywallet.personal"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

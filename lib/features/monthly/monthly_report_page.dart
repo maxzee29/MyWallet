@@ -14,13 +14,16 @@ import '../../data/repositories/app_models.dart';
 import '../../data/repositories/monthly_report_models.dart';
 import '../../shared/components/add_transaction_sheet.dart';
 import '../../shared/components/section_header.dart';
-import '../../shared/helpers/category_icon_mapper.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/pressable_surface.dart';
 import '../transactions/widgets/period_selector.dart';
-import '../transactions/widgets/transaction_tile.dart';
 import 'monthly_report_providers.dart';
+import 'widgets/monthly_activity_calendar.dart';
+import 'widgets/monthly_category_breakdown.dart';
 import 'widgets/monthly_insight_card.dart';
+import 'widgets/monthly_summary_carousel.dart';
+import 'widgets/monthly_transaction_widgets.dart';
+import 'widgets/monthly_trend_chart.dart';
 
 class MonthlyReportPage extends ConsumerStatefulWidget {
   const MonthlyReportPage({super.key});
@@ -38,13 +41,21 @@ class MonthlyReportPage extends ConsumerStatefulWidget {
 }
 
 class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
-  static const _tabLabels = ['Insight', 'Catatan'];
+  static const _tabLabels = ['Ringkasan', 'Keluar', 'Masuk', 'Catatan'];
 
   int _tabIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     final report = ref.watch(monthlyReportProvider);
+    final walletId = ref.watch(reportWalletProvider);
+    final wallets = ref
+        .watch(walletBalancesProvider)
+        .maybeWhen(
+          data: (value) =>
+              value.where((item) => !item.wallet.isArchived).toList(),
+          orElse: () => const <WalletBalance>[],
+        );
     final hideBalance = ref
         .watch(appSettingsProvider)
         .maybeWhen(
@@ -52,13 +63,18 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
           orElse: () => false,
         );
 
+    String walletLabel = 'Semua Dompet';
+    for (final item in wallets) {
+      if (item.wallet.id == walletId) walletLabel = item.wallet.name;
+    }
+
     return SafeArea(
       bottom: false,
       child: report.when(
         data: (data) {
           final currentMonth = DateFormatter.startOfMonth(DateTime.now());
           final canGoNext = data.month.isBefore(currentMonth);
-          final controller = ref.read(reportMonthProvider.notifier);
+          final monthController = ref.read(reportMonthProvider.notifier);
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(
@@ -78,25 +94,34 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: AppSpacing.xl),
+              _WalletFilterButton(
+                label: walletLabel,
+                onTap: () => _pickWallet(wallets, walletId),
+              ),
+              const SizedBox(height: AppSpacing.md),
               _MonthNavigator(
                 label: DateFormatter.monthLabel(data.month),
                 canGoPrevious: data.hasEarlierData,
                 canGoNext: canGoNext,
-                onPrevious: controller.previous,
-                onNext: controller.next,
+                onPrevious: monthController.previous,
+                onNext: monthController.next,
+                onLabelTap: () => _pickMonth(data),
               ),
+              const SizedBox(height: AppSpacing.md),
+              const _InfoChip(label: 'Transfer tidak dihitung'),
               const SizedBox(height: AppSpacing.lg),
-              _SummaryCard(report: data, hideBalance: hideBalance),
-              const SizedBox(height: AppSpacing.xl),
               PeriodSelector(
                 labels: _tabLabels,
                 selectedIndex: _tabIndex,
                 onChanged: (index) => setState(() => _tabIndex = index),
               ),
               const SizedBox(height: AppSpacing.xxl),
-              ...(_tabIndex == 0
-                  ? _insightTab(data, hideBalance)
-                  : _recordsTab(data, hideBalance)),
+              ...switch (_tabIndex) {
+                0 => _overviewTab(data, hideBalance),
+                1 => _typeTab(data, TransactionType.expense, hideBalance),
+                2 => _typeTab(data, TransactionType.income, hideBalance),
+                _ => _recordsTab(data, hideBalance),
+              },
             ],
           );
         },
@@ -106,21 +131,84 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
     );
   }
 
-  List<Widget> _insightTab(MonthlyReport data, bool hideBalance) {
+  void _pickWallet(List<WalletBalance> wallets, int? selected) {
+    showReportOptionsSheet<int?>(
+      context: context,
+      title: 'Pilih dompet',
+      selected: selected,
+      options: [
+        const ReportOption<int?>(label: 'Semua Dompet', value: null),
+        for (final item in wallets)
+          ReportOption<int?>(label: item.wallet.name, value: item.wallet.id),
+      ],
+      onSelected: ref.read(reportWalletProvider.notifier).select,
+    );
+  }
+
+  void _pickMonth(MonthlyReport data) {
+    showReportOptionsSheet<DateTime>(
+      context: context,
+      title: 'Pilih bulan',
+      selected: data.month,
+      options: [
+        for (final month in data.availableMonths)
+          ReportOption<DateTime>(
+            label: DateFormatter.monthLabel(month),
+            value: month,
+          ),
+      ],
+      onSelected: ref.read(reportMonthProvider.notifier).select,
+    );
+  }
+
+  List<Widget> _overviewTab(MonthlyReport data, bool hideBalance) {
     final monthLabel = DateFormatter.monthLabel(data.month);
 
     if (!data.hasActivity) {
       return [
         EmptyState(
           icon: Icons.insights_rounded,
-          title: 'Belum ada insight',
+          title: 'Belum ada data',
           message:
-              'Catat pemasukan atau pengeluaran di $monthLabel untuk melihat insight.',
+              'Catat pemasukan atau pengeluaran di $monthLabel untuk melihat ringkasan dan insight.',
         ),
       ];
     }
 
     return [
+      MonthlySummaryCarousel(report: data, hideBalance: hideBalance),
+      const SizedBox(height: AppSpacing.xxl),
+      MonthlyTrendChart(report: data, hideBalance: hideBalance),
+      const SizedBox(height: AppSpacing.xxl),
+      const SectionHeader(
+        title: 'Rincian kategori',
+        subtitle: 'Ketuk kategori untuk melihat transaksinya.',
+      ),
+      const SizedBox(height: AppSpacing.lg),
+      MonthlyCategoryBreakdown(
+        title: 'Pengeluaran teratas',
+        icon: Icons.trending_down_rounded,
+        accent: AppColors.expenseRed,
+        items: data.expenseCategories,
+        total: data.expense,
+        hideBalance: hideBalance,
+        limit: 3,
+        onTap: (item) =>
+            _showCategory(data, item, TransactionType.expense, hideBalance),
+      ),
+      const SizedBox(height: AppSpacing.lg),
+      MonthlyCategoryBreakdown(
+        title: 'Pemasukan teratas',
+        icon: Icons.trending_up_rounded,
+        accent: AppColors.incomeGreen,
+        items: data.incomeCategories,
+        total: data.income,
+        hideBalance: hideBalance,
+        limit: 3,
+        onTap: (item) =>
+            _showCategory(data, item, TransactionType.income, hideBalance),
+      ),
+      const SizedBox(height: AppSpacing.xxl),
       SectionHeader(
         title: 'Insight',
         subtitle: 'Ringkasan otomatis dari catatanmu di $monthLabel.',
@@ -130,14 +218,67 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
         MonthlyInsightCard(insight: insight),
         const SizedBox(height: AppSpacing.md),
       ],
-      if (data.expenseByCategory.isNotEmpty) ...[
-        const SizedBox(height: AppSpacing.lg),
-        _CategoryBreakdown(
-          items: data.expenseByCategory,
-          total: data.expense,
-          hideBalance: hideBalance,
+      const SizedBox(height: AppSpacing.lg),
+      MonthlyActivityCalendar(
+        report: data,
+        onDayTap: (day) => _showDay(data, day, hideBalance),
+      ),
+    ];
+  }
+
+  List<Widget> _typeTab(
+    MonthlyReport data,
+    TransactionType type,
+    bool hideBalance,
+  ) {
+    final isIncome = type == TransactionType.income;
+    final monthLabel = DateFormatter.monthLabel(data.month);
+    final total = isIncome ? data.income : data.expense;
+    final categories = isIncome
+        ? data.incomeCategories
+        : data.expenseCategories;
+
+    if (total == 0 && categories.isEmpty) {
+      return [
+        EmptyState(
+          icon: isIncome
+              ? Icons.trending_up_rounded
+              : Icons.trending_down_rounded,
+          title: isIncome ? 'Belum ada pemasukan' : 'Belum ada pengeluaran',
+          message: 'Tidak ada data di $monthLabel.',
         ),
-      ],
+      ];
+    }
+
+    final count = data.transactions.where((item) => item.type == type).length;
+    final average = isIncome
+        ? data.averageDailyIncome
+        : data.averageDailyExpense;
+
+    return [
+      _TypeSummaryCard(
+        label: isIncome ? 'Total pemasukan' : 'Total pengeluaran',
+        total: CurrencyFormatter.rupiah(total, hidden: hideBalance),
+        color: isIncome ? AppColors.incomeGreen : AppColors.expenseRed,
+        detail:
+            '$count transaksi · rata-rata ${CurrencyFormatter.rupiah(average, hidden: hideBalance)} per hari',
+      ),
+      const SizedBox(height: AppSpacing.xxl),
+      MonthlyTrendChart(
+        report: data,
+        hideBalance: hideBalance,
+        fixedType: type,
+      ),
+      const SizedBox(height: AppSpacing.xxl),
+      MonthlyCategoryBreakdown(
+        title: isIncome ? 'Pemasukan per kategori' : 'Pengeluaran per kategori',
+        icon: isIncome ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+        accent: isIncome ? AppColors.incomeGreen : AppColors.expenseRed,
+        items: categories,
+        total: total,
+        hideBalance: hideBalance,
+        onTap: (item) => _showCategory(data, item, type, hideBalance),
+      ),
     ];
   }
 
@@ -156,12 +297,23 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
     final groups = <DateTime, List<TransactionDetail>>{};
     for (final item in data.transactions) {
       groups
-          .putIfAbsent(DateFormatter.startOfDay(item.transaction.date), () => [])
+          .putIfAbsent(
+            DateFormatter.startOfDay(item.transaction.date),
+            () => [],
+          )
           .add(item);
     }
     final days = groups.keys.toList();
 
     return [
+      _TypeSummaryCard(
+        label: 'Selisih bulan ini',
+        total: CurrencyFormatter.rupiah(data.net, hidden: hideBalance),
+        color: data.net >= 0 ? AppColors.incomeGreen : AppColors.expenseRed,
+        detail:
+            'Masuk ${CurrencyFormatter.rupiah(data.income, hidden: hideBalance)} · Keluar ${CurrencyFormatter.rupiah(data.expense, hidden: hideBalance)}',
+      ),
+      const SizedBox(height: AppSpacing.xxl),
       const SectionHeader(
         title: 'Catatan keuangan',
         subtitle: 'Ketuk transaksi untuk mengubahnya.',
@@ -171,7 +323,11 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
         _DayHeader(date: day, items: groups[day]!, hideBalance: hideBalance),
         const SizedBox(height: AppSpacing.md),
         for (final item in groups[day]!) ...[
-          _tile(item, hideBalance),
+          MonthlyTransactionTile(
+            detail: item,
+            hideBalance: hideBalance,
+            onTap: () => _edit(item),
+          ),
           const SizedBox(height: AppSpacing.md),
         ],
         const SizedBox(height: AppSpacing.md),
@@ -179,28 +335,42 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
     ];
   }
 
-  TransactionTile _tile(TransactionDetail detail, bool hideBalance) {
-    final isTransfer = detail.type == TransactionType.transfer;
-    final title = isTransfer
-        ? '${detail.wallet.name} ke ${detail.transferWallet?.name ?? 'Dompet'}'
-        : detail.category?.name ?? 'Transaksi';
-    final note = detail.transaction.note?.trim();
-    final walletLabel = isTransfer ? 'Transfer antar dompet' : detail.wallet.name;
-    final subtitle = note == null || note.isEmpty
-        ? walletLabel
-        : '$walletLabel · $note';
+  void _showCategory(
+    MonthlyReport data,
+    MonthlyCategoryTotal total,
+    TransactionType type,
+    bool hideBalance,
+  ) {
+    final items = data.transactions
+        .where(
+          (item) =>
+              item.type == type &&
+              (item.category?.id ?? -1) == (total.category?.id ?? -1),
+        )
+        .toList();
 
-    return TransactionTile(
-      title: title,
-      subtitle: subtitle,
-      timeLabel: ReportDateFormatter.time(detail.transaction.date),
-      amount: CurrencyFormatter.rupiah(
-        detail.transaction.amount,
-        hidden: hideBalance,
-      ),
-      type: _previewType(detail.type),
-      icon: _transactionIcon(detail),
-      onTap: () => _edit(detail),
+    showMonthlyTransactionsSheet(
+      context,
+      title: total.label,
+      subtitle:
+          '${items.length} transaksi · ${CurrencyFormatter.rupiah(total.amount, hidden: hideBalance)} · ${DateFormatter.monthLabel(data.month)}',
+      items: items,
+      hideBalance: hideBalance,
+    );
+  }
+
+  void _showDay(MonthlyReport data, int day, bool hideBalance) {
+    final items = data.transactions
+        .where((item) => item.transaction.date.day == day)
+        .toList();
+    final date = DateTime(data.month.year, data.month.month, day);
+
+    showMonthlyTransactionsSheet(
+      context,
+      title: ReportDateFormatter.fullDay(date),
+      subtitle: '${items.length} transaksi',
+      items: items,
+      hideBalance: hideBalance,
     );
   }
 
@@ -217,6 +387,95 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
   }
 }
 
+class _WalletFilterButton extends StatelessWidget {
+  const _WalletFilterButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.colorScheme.brightness == Brightness.dark;
+
+    return PressableSurface(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurfaceElevated : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          border: Border.all(
+            color: isDark ? AppColors.darkBorderSubtle : AppColors.borderSubtle,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.account_balance_wallet_rounded,
+              color: isDark ? AppColors.softMint : AppColors.primary,
+              size: 22,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium,
+              ),
+            ),
+            Icon(
+              Icons.expand_more_rounded,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          border: Border.all(color: theme.colorScheme.outline),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.swap_horiz_rounded,
+              size: 16,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(label, style: theme.textTheme.labelMedium),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _MonthNavigator extends StatelessWidget {
   const _MonthNavigator({
     required this.label,
@@ -224,6 +483,7 @@ class _MonthNavigator extends StatelessWidget {
     required this.canGoNext,
     required this.onPrevious,
     required this.onNext,
+    required this.onLabelTap,
   });
 
   final String label;
@@ -231,6 +491,7 @@ class _MonthNavigator extends StatelessWidget {
   final bool canGoNext;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
+  final VoidCallback onLabelTap;
 
   @override
   Widget build(BuildContext context) {
@@ -256,12 +517,34 @@ class _MonthNavigator extends StatelessWidget {
             onTap: onPrevious,
           ),
           Expanded(
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleMedium,
+            child: Semantics(
+              button: true,
+              label: 'Pilih bulan',
+              child: PressableSurface(
+                onTap: onLabelTap,
+                child: SizedBox(
+                  height: AppSpacing.iconTile,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Icon(
+                        Icons.expand_more_rounded,
+                        color: theme.colorScheme.onSurfaceVariant,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
           _ArrowButton(
@@ -314,20 +597,24 @@ class _ArrowButton extends StatelessWidget {
   }
 }
 
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.report, required this.hideBalance});
+class _TypeSummaryCard extends StatelessWidget {
+  const _TypeSummaryCard({
+    required this.label,
+    required this.total,
+    required this.color,
+    required this.detail,
+  });
 
-  final MonthlyReport report;
-  final bool hideBalance;
+  final String label;
+  final String total;
+  final Color color;
+  final String detail;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final brightness = theme.colorScheme.brightness;
     final isDark = brightness == Brightness.dark;
-    final netColor = report.net >= 0
-        ? AppColors.incomeGreen
-        : AppColors.expenseRed;
 
     return Container(
       width: double.infinity,
@@ -343,225 +630,24 @@ class _SummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Selisih bulan ini', style: theme.textTheme.labelMedium),
+          Text(label, style: theme.textTheme.labelMedium),
           const SizedBox(height: AppSpacing.xs),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
-              CurrencyFormatter.rupiah(report.net, hidden: hideBalance),
+              total,
               maxLines: 1,
               style: theme.textTheme.displayMedium?.copyWith(
-                color: netColor,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            '${report.transactions.length} transaksi tercatat',
-            style: theme.textTheme.labelSmall,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Row(
-            children: [
-              Expanded(
-                child: _FlowStat(
-                  label: 'Masuk',
-                  value: CurrencyFormatter.rupiah(
-                    report.income,
-                    hidden: hideBalance,
-                  ),
-                  color: AppColors.incomeGreen,
-                ),
-              ),
-              Container(
-                width: AppSpacing.xxs,
-                height: AppSpacing.huge,
-                margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkBorderSubtle
-                      : AppColors.borderSubtle,
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                ),
-              ),
-              Expanded(
-                child: _FlowStat(
-                  label: 'Keluar',
-                  value: CurrencyFormatter.rupiah(
-                    report.expense,
-                    hidden: hideBalance,
-                  ),
-                  color: AppColors.expenseRed,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FlowStat extends StatelessWidget {
-  const _FlowStat({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: AppSpacing.metricDot,
-              height: AppSpacing.metricDot,
-              decoration: BoxDecoration(
                 color: color,
-                borderRadius: BorderRadius.circular(AppRadius.full),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Text(label, style: theme.textTheme.labelMedium),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(
-            value,
-            maxLines: 1,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CategoryBreakdown extends StatelessWidget {
-  const _CategoryBreakdown({
-    required this.items,
-    required this.total,
-    required this.hideBalance,
-  });
-
-  final List<CategoryAmount> items;
-  final int total;
-  final bool hideBalance;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final brightness = theme.colorScheme.brightness;
-    final isDark = brightness == Brightness.dark;
-    final visible = items.take(5).toList();
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurfaceElevated : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.xxl),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorderSubtle : AppColors.borderSubtle,
-        ),
-        boxShadow: AppShadows.soft(brightness),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Pengeluaran per kategori', style: theme.textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Lima kategori dengan pengeluaran terbesar.',
-            style: theme.textTheme.bodyMedium,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          for (var index = 0; index < visible.length; index++) ...[
-            _CategoryRow(
-              item: visible[index],
-              total: total,
-              hideBalance: hideBalance,
-            ),
-            if (index != visible.length - 1)
-              const SizedBox(height: AppSpacing.lg),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _CategoryRow extends StatelessWidget {
-  const _CategoryRow({
-    required this.item,
-    required this.total,
-    required this.hideBalance,
-  });
-
-  final CategoryAmount item;
-  final int total;
-  final bool hideBalance;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.colorScheme.brightness == Brightness.dark;
-    final ratio = total <= 0 ? 0.0 : (item.amount / total).clamp(0.0, 1.0);
-    final percent = (ratio * 100).round();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                item.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Text(
-              CurrencyFormatter.rupiah(item.amount, hidden: hideBalance),
-              style: theme.textTheme.titleMedium?.copyWith(
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.full),
-          child: LinearProgressIndicator(
-            value: ratio,
-            minHeight: 6,
-            color: Color(item.colorValue),
-            backgroundColor: isDark
-                ? AppColors.darkSurfaceSoft
-                : AppColors.surfaceSoft,
           ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text('$percent% dari pengeluaran', style: theme.textTheme.labelSmall),
-      ],
+          const SizedBox(height: AppSpacing.xs),
+          Text(detail, style: theme.textTheme.labelSmall),
+        ],
+      ),
     );
   }
 }
@@ -600,28 +686,4 @@ class _DayHeader extends StatelessWidget {
       ],
     );
   }
-}
-
-TransactionPreviewType _previewType(TransactionType type) {
-  switch (type) {
-    case TransactionType.income:
-      return TransactionPreviewType.income;
-    case TransactionType.expense:
-      return TransactionPreviewType.expense;
-    case TransactionType.transfer:
-      return TransactionPreviewType.transfer;
-  }
-}
-
-IconData _transactionIcon(TransactionDetail detail) {
-  if (detail.type == TransactionType.transfer) {
-    return Icons.swap_horiz_rounded;
-  }
-  if (detail.category != null) {
-    return categoryIconForEntry(detail.category);
-  }
-  if (detail.type == TransactionType.income) {
-    return Icons.work_rounded;
-  }
-  return Icons.category_rounded;
 }

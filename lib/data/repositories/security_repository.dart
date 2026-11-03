@@ -156,7 +156,7 @@ class SecurityRepository {
       throw ArgumentError('Biometrik tidak tersedia di perangkat ini.');
     }
     return _localAuth.authenticate(
-      localizedReason: 'Buka FadDompet dengan biometrik',
+      localizedReason: 'Buka MyWallet dengan biometrik',
       biometricOnly: true,
       persistAcrossBackgrounding: false,
     );

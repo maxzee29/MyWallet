@@ -231,7 +231,7 @@ class _AppLockScreenState extends ConsumerState<_AppLockScreen> {
       setState(() => _message = error.message.toString());
     } catch (_) {
       if (!mounted) return;
-      setState(() => _message = 'Gunakan PIN untuk membuka FadDompet.');
+      setState(() => _message = 'Gunakan PIN untuk membuka MyWallet.');
     }
   }
 
@@ -275,13 +275,13 @@ class _AppLockScreenState extends ConsumerState<_AppLockScreen> {
                   const AppBrandMark(size: 60, radius: AppRadius.lg),
                   const SizedBox(height: AppSpacing.xxl),
                   Text(
-                    'Buka FadDompet',
+                    'Buka MyWallet',
                     style: theme.textTheme.headlineSmall,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'Masukkan PIN untuk membuka FadDompet',
+                    'Masukkan PIN untuk membuka MyWallet',
                     style: theme.textTheme.bodyMedium,
                     textAlign: TextAlign.center,
                   ),

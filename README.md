@@ -31,7 +31,7 @@
 </p>
 
 <p align="center">
-  <img width="180" alt="FadDompet transactions" src="docs/screenshots/transactions.webp" />
+  <img width="180" alt="FadDompet transactions" src="docs/screenshots/transaksi.webp" />
   <img width="180" alt="FadDompet settings" src="docs/screenshots/settings.webp" />
   <img width="180" alt="FadDompet analytics" src="docs/screenshots/analytic.webp" />
 </p>

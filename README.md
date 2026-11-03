@@ -17,7 +17,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.x-02569B?style=flat-square&logo=flutter&logoColor=white">
   <img alt="Android" src="https://img.shields.io/badge/Android-primary-3DDC84?style=flat-square&logo=android&logoColor=white">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/License-MIT-blue?style=flat-square"></a>
-  <a href="https://github.com/fadd3079-prog/faddompet/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/fadd3079-prog/faddompet?style=flat-square"></a>
+  <a href="https://github.com/maxzee29/MyWallet/releases/tag/Release"><img alt="Latest release" src="https://img.shields.io/github/v/release/fadd3079-prog/faddompet?style=flat-square"></a>
   <img alt="Offline first" src="https://img.shields.io/badge/Offline-first-0F766E?style=flat-square">
 </p>
 

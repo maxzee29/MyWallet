@@ -14,11 +14,13 @@ class MonthlyTransactionTile extends StatelessWidget {
     required this.detail,
     required this.hideBalance,
     this.onTap,
+    this.onLongPress,
   });
 
   final TransactionDetail detail;
   final bool hideBalance;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +47,7 @@ class MonthlyTransactionTile extends StatelessWidget {
       type: _previewType(detail.type),
       icon: _transactionIcon(detail),
       onTap: onTap,
+      onLongPress: onLongPress,
     );
   }
 }

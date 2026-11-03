@@ -18,7 +18,6 @@ import '../../shared/widgets/app_icon_action_button.dart';
 import '../../shared/widgets/pressable_surface.dart';
 import '../../shared/widgets/top_toast.dart';
 import '../analytics/analytics_page.dart';
-import '../monthly/monthly_report_page.dart';
 import 'widgets/app_update_sheet.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -77,12 +76,6 @@ class SettingsPage extends ConsumerWidget {
             ),
           ),
           _SettingsTile(
-            icon: Icons.calendar_month_rounded,
-            title: 'Laporan Bulanan',
-            subtitle: 'Insight dan catatan keuangan per bulan',
-            onTap: () => MonthlyReportPage.open(context),
-          ),
-          _SettingsTile(
             icon: Icons.insights_rounded,
             title: 'Analitik & Budget',
             subtitle: 'Lihat grafik dan atur budget bulanan',
@@ -136,10 +129,10 @@ class SettingsPage extends ConsumerWidget {
           _SettingsTile(
             icon: Icons.volunteer_activism_rounded,
             title: 'Dukung Pengembangan',
-            subtitle: 'Dukungan opsional untuk pengembangan FadDompet.',
+            subtitle: 'Dukungan opsional untuk pengembangan MyWallet.',
             onTap: () => _confirmExternalLink(
               context,
-              url: 'https://tako.id/fadhol_pemula',
+              url: 'https://tako.id/arifa29',
               actionLabel: 'Lanjutkan',
               note: 'Dukungan bersifat opsional.',
             ),
@@ -150,7 +143,7 @@ class SettingsPage extends ConsumerWidget {
             subtitle: 'Lihat kode sumber dan perkembangan proyek.',
             onTap: () => _confirmExternalLink(
               context,
-              url: 'https://github.com/fadd3079-prog/faddompet',
+              url: 'https://github.com/maxzee29/MyWallet',
               actionLabel: 'Buka GitHub',
             ),
           ),

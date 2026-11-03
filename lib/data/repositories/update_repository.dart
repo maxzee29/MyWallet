@@ -119,7 +119,7 @@ class UpdateRepository {
        _fileHandler = fileHandler ?? createUpdateFileHandler();
 
   static final Uri latestReleaseUri = Uri.parse(
-    'https://api.github.com/repos/fadd3079-prog/faddompet/releases/latest',
+    'https://api.github.com/repos/maxzee29/MyWallet/releases/latest',
   );
 
   final http.Client _client;

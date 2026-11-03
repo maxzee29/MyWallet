@@ -19,7 +19,9 @@ import '../monthly/monthly_report_page.dart';
 import '../transactions/widgets/transaction_tile.dart';
 
 class DashboardPage extends ConsumerWidget {
-  const DashboardPage({super.key});
+  const DashboardPage({super.key, this.onOpenReport});
+
+  final VoidCallback? onOpenReport;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -68,7 +70,7 @@ class DashboardPage extends ConsumerWidget {
                       title: 'Ringkasan bulan ini',
                       subtitle: 'Bulan berjalan',
                       actionLabel: 'Laporan',
-                      onAction: () => MonthlyReportPage.open(context),
+                      onAction: onOpenReport ?? (() => MonthlyReportPage.open(context)),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _MonthlySnapshotCard(

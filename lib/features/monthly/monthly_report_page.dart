@@ -12,16 +12,18 @@ import '../../core/formatters/date_formatter.dart';
 import '../../core/formatters/report_date_formatter.dart';
 import '../../data/repositories/app_models.dart';
 import '../../data/repositories/monthly_report_models.dart';
-import '../../shared/components/add_transaction_sheet.dart';
 import '../../shared/components/section_header.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/pressable_surface.dart';
 import '../transactions/widgets/period_selector.dart';
+import '../transactions/widgets/transaction_filter_chips.dart';
+import '../transactions/widgets/transaction_search_bar.dart';
 import 'monthly_report_providers.dart';
 import 'widgets/monthly_activity_calendar.dart';
 import 'widgets/monthly_category_breakdown.dart';
 import 'widgets/monthly_insight_card.dart';
 import 'widgets/monthly_summary_carousel.dart';
+import 'widgets/monthly_transaction_actions.dart';
 import 'widgets/monthly_transaction_widgets.dart';
 import 'widgets/monthly_trend_chart.dart';
 
@@ -42,8 +44,24 @@ class MonthlyReportPage extends ConsumerStatefulWidget {
 
 class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
   static const _tabLabels = ['Ringkasan', 'Keluar', 'Masuk', 'Catatan'];
+  static const _filterLabels = [
+    'Semua',
+    'Pemasukan',
+    'Pengeluaran',
+    'Transfer',
+  ];
+
+  final TextEditingController _searchController = TextEditingController();
 
   int _tabIndex = 0;
+  int _filterIndex = 0;
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -294,8 +312,29 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
       ];
     }
 
+    final type = switch (_filterIndex) {
+      1 => TransactionType.income,
+      2 => TransactionType.expense,
+      3 => TransactionType.transfer,
+      _ => null,
+    };
+    final query = _query.trim().toLowerCase();
+    final visible = data.transactions.where((item) {
+      if (type != null && item.type != type) return false;
+      if (query.isEmpty) return true;
+
+      final haystack = [
+        item.category?.name,
+        item.wallet.name,
+        item.transferWallet?.name,
+        item.transaction.note,
+      ].whereType<String>().join(' ').toLowerCase();
+
+      return haystack.contains(query);
+    }).toList();
+
     final groups = <DateTime, List<TransactionDetail>>{};
-    for (final item in data.transactions) {
+    for (final item in visible) {
       groups
           .putIfAbsent(
             DateFormatter.startOfDay(item.transaction.date),
@@ -316,9 +355,23 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
       const SizedBox(height: AppSpacing.xxl),
       const SectionHeader(
         title: 'Catatan keuangan',
-        subtitle: 'Ketuk transaksi untuk mengubahnya.',
+        subtitle: 'Ketuk untuk detail, tahan untuk menghapus.',
       ),
       const SizedBox(height: AppSpacing.lg),
+      _SearchFilterCard(
+        controller: _searchController,
+        onSearchChanged: (value) => setState(() => _query = value),
+        labels: _filterLabels,
+        selectedIndex: _filterIndex,
+        onFilterChanged: (index) => setState(() => _filterIndex = index),
+      ),
+      const SizedBox(height: AppSpacing.xl),
+      if (visible.isEmpty)
+        const EmptyState(
+          icon: Icons.search_off_rounded,
+          title: 'Tidak ada hasil',
+          message: 'Coba ubah kata kunci atau filter jenis transaksi.',
+        ),
       for (final day in days) ...[
         _DayHeader(date: day, items: groups[day]!, hideBalance: hideBalance),
         const SizedBox(height: AppSpacing.md),
@@ -326,7 +379,9 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
           MonthlyTransactionTile(
             detail: item,
             hideBalance: hideBalance,
-            onTap: () => _edit(item),
+            onTap: () =>
+                showTransactionDetailSheet(context, ref, item, hideBalance),
+            onLongPress: () => confirmDeleteTransaction(context, ref, item),
           ),
           const SizedBox(height: AppSpacing.md),
         ],
@@ -373,16 +428,55 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
       hideBalance: hideBalance,
     );
   }
+}
 
-  void _edit(TransactionDetail detail) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: false,
-      backgroundColor: Colors.transparent,
-      barrierColor: AppColors.scrim,
-      builder: (context) => AddTransactionSheet(transaction: detail),
+class _SearchFilterCard extends StatelessWidget {
+  const _SearchFilterCard({
+    required this.controller,
+    required this.onSearchChanged,
+    required this.labels,
+    required this.selectedIndex,
+    required this.onFilterChanged,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<String> onSearchChanged;
+  final List<String> labels;
+  final int selectedIndex;
+  final ValueChanged<int> onFilterChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final brightness = theme.colorScheme.brightness;
+    final isDark = brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceElevated : AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.xxl),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorderSubtle : AppColors.borderSubtle,
+        ),
+        boxShadow: AppShadows.soft(brightness),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TransactionSearchBar(
+            controller: controller,
+            onChanged: onSearchChanged,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          TransactionFilterChips(
+            labels: labels,
+            selectedIndex: selectedIndex,
+            onChanged: onFilterChanged,
+          ),
+        ],
+      ),
     );
   }
 }

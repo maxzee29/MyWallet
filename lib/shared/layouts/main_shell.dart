@@ -6,8 +6,8 @@ import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_shadows.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../features/dashboard/dashboard_page.dart';
+import '../../features/monthly/monthly_report_page.dart';
 import '../../features/settings/settings_page.dart';
-import '../../features/transactions/transactions_page.dart';
 import '../../features/wallets/wallets_page.dart';
 import '../components/add_transaction_sheet.dart';
 import '../widgets/premium_bottom_nav.dart';
@@ -22,11 +22,11 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [
-    DashboardPage(),
-    TransactionsPage(),
-    WalletsPage(),
-    SettingsPage(),
+  late final List<Widget> _pages = [
+    DashboardPage(onOpenReport: () => setState(() => _currentIndex = 1)),
+    const MonthlyReportPage(),
+    const WalletsPage(),
+    const SettingsPage(),
   ];
 
   void _showQuickAddSheet() {
@@ -52,9 +52,9 @@ class _MainShellState extends State<MainShell> {
         label: 'Beranda',
       ),
       PremiumBottomNavItem(
-        icon: Icons.receipt_long_outlined,
-        selectedIcon: Icons.receipt_long_rounded,
-        label: 'Transaksi',
+        icon: Icons.insights_outlined,
+        selectedIcon: Icons.insights_rounded,
+        label: 'Laporan',
       ),
       PremiumBottomNavItem(
         icon: Icons.account_balance_wallet_outlined,

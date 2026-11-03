@@ -5,11 +5,11 @@
 <h1 align="center">MyWallet</h1>
 
 <p align="center">
-  Aplikasi money management offline ringan untuk Android.
+  Offline-first personal finance tracker for Android.
 </p>
 
 <p align="center">
-  FadDompet membantu pengguna mencatat pemasukan, pengeluaran, dompet, anggaran, cadangan data, dan pembaruan aplikasi secara lokal di perangkat mereka.
+  MyWallet helps users record income, expenses, wallets, budgets, data backups, and app updates locally on their devices.
 </p>
 
 <p align="center">
@@ -58,7 +58,7 @@
 - Data stays on the device
 - Backup files contain financial data and should be stored safely
 
-FadDompet uses the internet only for user-triggered actions such as checking app updates, downloading an APK update, opening external links, or sharing exported files through Android.
+MyWallet uses the internet only for user-triggered actions such as checking app updates, downloading an APK update, opening external links, or sharing exported files through Android.
 
 Current release APK name:
 

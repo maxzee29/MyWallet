@@ -62,4 +62,4 @@ MyWallet uses the internet only for user-triggered actions such as checking app 
 Current release APK name:
 
 ```txt
-FadDompet-v1.4.0-arm64.apk
+MyWallet-v1.4.0-arm64.apk

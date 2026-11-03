@@ -51,7 +51,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -65,11 +65,26 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Prepare release signing
+        env:
+          KEYSTORE_B64: ${{ secrets.MYWALLET_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > android/app/mywallet-release.p12
+            printf 'storeFile=mywallet-release.p12\nstorePassword=mywallet-signing\nkeyPassword=mywallet-signing\nkeyAlias=mywallet\n' > android/key.properties
+            echo "Memakai keystore tetap dari secret MYWALLET_KEYSTORE_B64."
+          else
+            echo "::warning::Secret MYWALLET_KEYSTORE_B64 belum diisi. APK memakai debug signing yang berubah setiap build."
+          fi
+
       - name: Build split APK
         run: flutter build apk --release --split-per-abi
+
+      - name: Build universal APK
+        run: flutter build apk --release
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: faddompet-release-apks
+          name: mywallet-release-apks
           path: build/app/outputs/flutter-apk/*-release.apk

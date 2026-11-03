@@ -2,7 +2,7 @@
   <img src="assets/icons/app_icon.png" width="96" alt="FadDompet logo">
 </p>
 
-<h1 align="center">FadDompet</h1>
+<h1 align="center">MyWallet</h1>
 
 <p align="center">
   Offline-first personal finance tracker for Android.
@@ -59,14 +59,6 @@
 - Backup files contain financial data and should be stored safely
 
 FadDompet uses the internet only for user-triggered actions such as checking app updates, downloading an APK update, opening external links, or sharing exported files through Android.
-
-## Download
-
-Download the latest Android APK from GitHub Releases:
-
-https://github.com/fadd3079-prog/faddompet/releases/latest
-
-For most modern Android phones, use the `arm64` APK.
 
 Current release APK name:
 

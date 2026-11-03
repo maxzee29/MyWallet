@@ -24,8 +24,7 @@
 ## Screenshots
 
 <p align="center">
-  <img width="180" alt="FadDompet dashboard" src="docs/screenshots/dashboard.webp" />
-  <img width="180" alt="FadDompet app lock" src="docs/screenshots/app-lock.webp" />
+  <img width="180" alt="FadDompet dashboard" src="docs/screenshots/awal.webp" />
   <img width="180" alt="FadDompet add transaction" src="docs/screenshots/add-transaction.webp" />
   <img width="180" alt="FadDompet wallets" src="docs/screenshots/wallets.webp" />
 </p>

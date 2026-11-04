@@ -11,21 +11,18 @@ import '../../app/theme/app_shadows.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../core/enums/transaction_type.dart';
 import '../../core/formatters/currency_formatter.dart';
-import '../../core/formatters/date_formatter.dart';
+import '../../core/formatters/report_date_formatter.dart';
 import '../../data/local/database/app_database.dart';
 import '../../data/repositories/app_models.dart';
 import '../helpers/category_icon_mapper.dart';
 import '../widgets/top_toast.dart';
 import '../widgets/pressable_surface.dart';
-import 'amount_display.dart';
 import 'amount_keypad.dart';
-import 'category_choice_chip.dart';
-import 'category_group_section.dart';
-import 'date_choice_chip.dart';
 import 'transaction_type_segmented_control.dart';
-import 'wallet_choice_chip.dart';
 
 enum _NoticeTone { info, warning }
+
+enum _WalletTarget { single, from, to }
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
   const AddTransactionSheet({super.key, this.transaction});
@@ -52,6 +49,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   String? _noticeMessage;
   _NoticeTone _noticeTone = _NoticeTone.info;
   bool _saving = false;
+  bool _showKeypad = true;
 
   int get _amount => int.tryParse(_amountDigits) ?? 0;
 
@@ -96,6 +94,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       _selectedDate = transaction.transaction.date;
       _dateLabel = 'Pilih tanggal';
       _noteController.text = transaction.transaction.note ?? '';
+      _showKeypad = false;
     }
   }
 
@@ -312,10 +311,15 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       return const _SheetLoading(message: 'Aktifkan dompet terlebih dahulu');
     }
 
+    final selectedCategory = _categoryById(categories, _selectedCategoryId);
+    final singleWallet = _walletById(selectableWallets, _selectedWalletId);
+    final fromWallet = _walletById(selectableWallets, _fromWalletId);
+    final toWallet = _walletById(selectableWallets, _toWalletId);
+
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: FractionallySizedBox(
-        heightFactor: 0.94,
+        heightFactor: 1,
         alignment: Alignment.bottomCenter,
         child: Align(
           alignment: Alignment.bottomCenter,
@@ -339,12 +343,17 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 top: false,
                 child: Column(
                   children: [
-                    _SheetHeader(onClose: () => Navigator.pop(context)),
+                    _PageHeader(
+                      title: widget.transaction == null
+                          ? 'Tambah Transaksi'
+                          : 'Ubah Transaksi',
+                      onBack: () => Navigator.pop(context),
+                    ),
                     Expanded(
                       child: ListView(
                         padding: const EdgeInsets.fromLTRB(
                           AppSpacing.screen,
-                          AppSpacing.md,
+                          AppSpacing.sm,
                           AppSpacing.screen,
                           AppSpacing.xl,
                         ),
@@ -358,97 +367,106 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                             onChanged: (index) =>
                                 _selectType(index, categories),
                           ),
-                          const SizedBox(height: AppSpacing.xl),
-                          AmountDisplay(
-                            label: 'Nominal',
-                            amount: CurrencyFormatter.rupiah(_amount),
+                          const SizedBox(height: AppSpacing.lg),
+                          _AmountCard(
+                            amountText: CurrencyFormatter.rupiah(
+                              _amount,
+                            ).replaceFirst('Rp', ''),
+                            isEmpty: _amount == 0,
                             helper: _amountHelper,
                             accentColor: _accentColor,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          AmountKeypad(
-                            accentColor: _accentColor,
+                            showKeypad: _showKeypad,
+                            onToggleKeypad: () =>
+                                setState(() => _showKeypad = !_showKeypad),
                             onDigitPressed: _appendDigit,
                             onBackspacePressed: _backspace,
                           ),
-                          const SizedBox(height: AppSpacing.xxxl),
-                          _DateTimePicker(
-                            selectedOption: _dateLabel,
-                            selectedDateTime: DateFormatter.dateTimeLabel(
-                              _selectedDate,
-                            ),
-                            onSelected: _selectDate,
+                          const SizedBox(height: AppSpacing.xl),
+                          const _FormSectionLabel('Detail transaksi'),
+                          const SizedBox(height: AppSpacing.md),
+                          _TitleField(controller: _noteController),
+                          const SizedBox(height: AppSpacing.lg),
+                          _FormCard(
+                            children: [
+                              if (_type == TransactionType.transfer) ...[
+                                _PickerRow(
+                                  icon: Icons.logout_rounded,
+                                  color: _accentColor,
+                                  label: 'Dari dompet',
+                                  value: fromWallet?.wallet.name ??
+                                      'Pilih dompet',
+                                  caption: fromWallet == null
+                                      ? null
+                                      : 'Saldo ${CurrencyFormatter.rupiah(fromWallet.balance)}',
+                                  onTap: () => _pickWallet(
+                                    selectableWallets,
+                                    _WalletTarget.from,
+                                  ),
+                                ),
+                                _PickerRow(
+                                  icon: Icons.login_rounded,
+                                  color: _accentColor,
+                                  label: 'Ke dompet',
+                                  value:
+                                      toWallet?.wallet.name ?? 'Pilih dompet',
+                                  caption: toWallet == null
+                                      ? null
+                                      : 'Saldo ${CurrencyFormatter.rupiah(toWallet.balance)}',
+                                  onTap: () => _pickWallet(
+                                    selectableWallets,
+                                    _WalletTarget.to,
+                                  ),
+                                ),
+                              ] else ...[
+                                _PickerRow(
+                                  icon: selectedCategory == null
+                                      ? Icons.category_rounded
+                                      : categoryIconForEntry(selectedCategory),
+                                  color: selectedCategory == null
+                                      ? _accentColor
+                                      : Color(selectedCategory.colorValue),
+                                  label: 'Kategori',
+                                  value:
+                                      selectedCategory?.name ??
+                                      'Pilih kategori',
+                                  onTap: () => _pickCategory(visibleCategories),
+                                ),
+                                _PickerRow(
+                                  icon: singleWallet == null
+                                      ? Icons.account_balance_wallet_rounded
+                                      : _walletIcon(singleWallet.wallet.type),
+                                  color: AppColors.infoBlue,
+                                  label: 'Dompet',
+                                  value:
+                                      singleWallet?.wallet.name ??
+                                      'Pilih dompet',
+                                  caption: singleWallet == null
+                                      ? null
+                                      : 'Saldo ${CurrencyFormatter.rupiah(singleWallet.balance)}',
+                                  onTap: () => _pickWallet(
+                                    selectableWallets,
+                                    _WalletTarget.single,
+                                  ),
+                                ),
+                              ],
+                              _PickerRow(
+                                icon: Icons.event_rounded,
+                                color: AppColors.warningOrange,
+                                label: 'Tanggal & waktu',
+                                value:
+                                    '${ReportDateFormatter.fullDayLong(_selectedDate)} • ${ReportDateFormatter.time(_selectedDate)}',
+                                onTap: _pickDate,
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: AppSpacing.xxxl),
-                          if (_type == TransactionType.transfer)
-                            _TransferFields(
-                              wallets: selectableWallets,
-                              fromWalletId: _fromWalletId,
-                              toWalletId: _toWalletId,
-                              onFromSelected: (id) {
-                                setState(() {
-                                  _fromWalletId = id;
-                                  if (_toWalletId == id) {
-                                    _toWalletId = selectableWallets
-                                        .map((item) => item.wallet.id)
-                                        .firstWhere(
-                                          (item) => item != id,
-                                          orElse: () => id,
-                                        );
-                                  }
-                                  _noticeMessage = null;
-                                });
-                              },
-                              onToSelected: (id) {
-                                setState(() {
-                                  _toWalletId = id;
-                                  if (_fromWalletId == id) {
-                                    _fromWalletId = selectableWallets
-                                        .map((item) => item.wallet.id)
-                                        .firstWhere(
-                                          (item) => item != id,
-                                          orElse: () => id,
-                                        );
-                                  }
-                                  _noticeMessage = null;
-                                });
-                              },
-                            )
-                          else
-                            _CategoryPicker(
-                              categories: visibleCategories,
-                              selectedCategoryId: _selectedCategoryId,
-                              fallbackAccent: _accentColor,
-                              onSelected: (category) {
-                                setState(() {
-                                  _selectedCategoryId = category.id;
-                                  _noticeMessage = null;
-                                });
-                              },
-                            ),
                           if (_showsAdminFee) ...[
-                            const SizedBox(height: AppSpacing.xxxl),
+                            const SizedBox(height: AppSpacing.xl),
                             _AdminFeeField(
                               controller: _adminFeeController,
                               transferAmount: _amount,
                               onChanged: () => setState(() {}),
                             ),
                           ],
-                          if (_type != TransactionType.transfer) ...[
-                            const SizedBox(height: AppSpacing.xxxl),
-                            _WalletPicker(
-                              wallets: selectableWallets,
-                              selectedWalletId: _selectedWalletId,
-                              onSelected: (id) {
-                                setState(() {
-                                  _selectedWalletId = id;
-                                  _noticeMessage = null;
-                                });
-                              },
-                            ),
-                          ],
-                          const SizedBox(height: AppSpacing.xxxl),
-                          _NoteField(controller: _noteController),
                         ],
                       ),
                     ),
@@ -464,6 +482,104 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  CategoryEntry? _categoryById(List<CategoryEntry> categories, int? id) {
+    if (id == null) return null;
+    for (final category in categories) {
+      if (category.id == id) return category;
+    }
+    return null;
+  }
+
+  WalletBalance? _walletById(List<WalletBalance> wallets, int? id) {
+    if (id == null) return null;
+    for (final item in wallets) {
+      if (item.wallet.id == id) return item;
+    }
+    return null;
+  }
+
+  void _pickCategory(List<CategoryEntry> categories) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => _CategorySheet(
+        categories: categories,
+        type: _type,
+        selectedId: _selectedCategoryId,
+        onSelected: (category) {
+          Navigator.pop(sheetContext);
+          setState(() {
+            _selectedCategoryId = category.id;
+            _noticeMessage = null;
+          });
+        },
+      ),
+    );
+  }
+
+  void _pickWallet(List<WalletBalance> wallets, _WalletTarget target) {
+    final selected = switch (target) {
+      _WalletTarget.single => _selectedWalletId,
+      _WalletTarget.from => _fromWalletId,
+      _WalletTarget.to => _toWalletId,
+    };
+    final title = switch (target) {
+      _WalletTarget.single => 'Pilih dompet',
+      _WalletTarget.from => 'Dari dompet',
+      _WalletTarget.to => 'Ke dompet',
+    };
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => _WalletSheet(
+        title: title,
+        wallets: wallets,
+        selectedId: selected,
+        onSelected: (id) {
+          Navigator.pop(sheetContext);
+          setState(() {
+            switch (target) {
+              case _WalletTarget.single:
+                _selectedWalletId = id;
+              case _WalletTarget.from:
+                _fromWalletId = id;
+                if (_toWalletId == id) {
+                  _toWalletId = wallets
+                      .map((item) => item.wallet.id)
+                      .firstWhere((item) => item != id, orElse: () => id);
+                }
+              case _WalletTarget.to:
+                _toWalletId = id;
+                if (_fromWalletId == id) {
+                  _fromWalletId = wallets
+                      .map((item) => item.wallet.id)
+                      .firstWhere((item) => item != id, orElse: () => id);
+                }
+            }
+            _noticeMessage = null;
+          });
+        },
+      ),
+    );
+  }
+
+  void _pickDate() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => _DateSheet(
+        selectedOption: _dateLabel,
+        onSelected: (label) {
+          Navigator.pop(sheetContext);
+          _selectDate(label);
+        },
       ),
     );
   }
@@ -521,234 +637,6 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     return visible.firstWhere(
       (category) => frequent.contains(category.name),
       orElse: () => visible.first,
-    );
-  }
-}
-
-class _SheetHeader extends StatelessWidget {
-  const _SheetHeader({required this.onClose});
-
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.colorScheme.brightness == Brightness.dark;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.screen,
-        AppSpacing.md,
-        AppSpacing.screen,
-        AppSpacing.sm,
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: AppSpacing.huge,
-            height: AppSpacing.xs,
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkBorderSubtle
-                  : AppColors.borderSubtle,
-              borderRadius: BorderRadius.circular(AppRadius.full),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tambah Transaksi',
-                      style: theme.textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Catat uang masuk, keluar, atau transfer dengan cepat.',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              GestureDetector(
-                onTap: onClose,
-                behavior: HitTestBehavior.opaque,
-                child: Container(
-                  width: AppSpacing.iconTileSmall,
-                  height: AppSpacing.iconTileSmall,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkSurfaceSoft
-                        : AppColors.surfaceSoft,
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                  ),
-                  child: Icon(
-                    Icons.close_rounded,
-                    size: AppSpacing.xl,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CategoryPicker extends StatelessWidget {
-  const _CategoryPicker({
-    required this.categories,
-    required this.selectedCategoryId,
-    required this.fallbackAccent,
-    required this.onSelected,
-  });
-
-  final List<CategoryEntry> categories;
-  final int? selectedCategoryId;
-  final Color fallbackAccent;
-  final ValueChanged<CategoryEntry> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final frequent = [
-      for (final name in _frequentLabels(
-        categories.isNotEmpty &&
-                categories.first.type == TransactionType.income.value
-            ? TransactionType.income
-            : TransactionType.expense,
-      ))
-        if (categories.any((category) => category.name == name))
-          categories.firstWhere((category) => category.name == name),
-    ];
-    final grouped = <String, List<CategoryEntry>>{};
-    for (final category in categories) {
-      grouped.putIfAbsent(category.groupName, () => []).add(category);
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SheetSectionTitle(
-          title: 'Pilih kategori',
-          subtitle: 'Mulai dari yang sering dipakai.',
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        if (frequent.isNotEmpty)
-          CategoryGroupSection(
-            title: 'Sering dipakai',
-            children: [
-              for (final item in frequent)
-                CategoryChoiceChip(
-                  label: item.name,
-                  icon: categoryIconForEntry(item),
-                  selected: selectedCategoryId == item.id,
-                  accentColor: fallbackAccent,
-                  onSelected: () => onSelected(item),
-                ),
-            ],
-          ),
-        for (final entry in grouped.entries) ...[
-          const SizedBox(height: AppSpacing.xl),
-          CategoryGroupSection(
-            title: entry.key,
-            children: [
-              for (final item in entry.value)
-                CategoryChoiceChip(
-                  label: item.name,
-                  icon: categoryIconForEntry(item),
-                  selected: selectedCategoryId == item.id,
-                  accentColor: Color(item.colorValue),
-                  onSelected: () => onSelected(item),
-                ),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _WalletPicker extends StatelessWidget {
-  const _WalletPicker({
-    required this.wallets,
-    required this.selectedWalletId,
-    required this.onSelected,
-  });
-
-  final List<WalletBalance> wallets;
-  final int? selectedWalletId;
-  final ValueChanged<int> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SheetSectionTitle(
-          title: 'Pilih dompet',
-          subtitle: 'Saldo akan masuk atau keluar dari dompet ini.',
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        _WalletChipRow(
-          wallets: wallets,
-          selectedWalletId: selectedWalletId,
-          onSelected: onSelected,
-        ),
-      ],
-    );
-  }
-}
-
-class _TransferFields extends StatelessWidget {
-  const _TransferFields({
-    required this.wallets,
-    required this.fromWalletId,
-    required this.toWalletId,
-    required this.onFromSelected,
-    required this.onToSelected,
-  });
-
-  final List<WalletBalance> wallets;
-  final int? fromWalletId;
-  final int? toWalletId;
-  final ValueChanged<int> onFromSelected;
-  final ValueChanged<int> onToSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SheetSectionTitle(
-          title: 'Transfer dompet',
-          subtitle: 'Pilih sumber dan tujuan saldo.',
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Text('Dari', style: theme.textTheme.labelLarge),
-        const SizedBox(height: AppSpacing.md),
-        _WalletChipRow(
-          wallets: wallets,
-          selectedWalletId: fromWalletId,
-          onSelected: onFromSelected,
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        Text('Ke', style: theme.textTheme.labelLarge),
-        const SizedBox(height: AppSpacing.md),
-        _WalletChipRow(
-          wallets: wallets,
-          selectedWalletId: toWalletId,
-          onSelected: onToSelected,
-        ),
-      ],
     );
   }
 }
@@ -825,33 +713,166 @@ class _AdminFeeField extends StatelessWidget {
   }
 }
 
-class _WalletChipRow extends StatelessWidget {
-  const _WalletChipRow({
-    required this.wallets,
-    required this.selectedWalletId,
-    required this.onSelected,
-  });
+class _PageHeader extends StatelessWidget {
+  const _PageHeader({required this.title, required this.onBack});
 
-  final List<WalletBalance> wallets;
-  final int? selectedWalletId;
-  final ValueChanged<int> onSelected;
+  final String title;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      clipBehavior: Clip.hardEdge,
+    final theme = Theme.of(context);
+    final isDark = theme.colorScheme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screen,
+        AppSpacing.lg,
+        AppSpacing.screen,
+        AppSpacing.sm,
+      ),
       child: Row(
         children: [
-          for (var index = 0; index < wallets.length; index++) ...[
-            WalletChoiceChip(
-              label: wallets[index].wallet.name,
-              icon: _walletIcon(wallets[index].wallet.type),
-              selected: selectedWalletId == wallets[index].wallet.id,
-              onSelected: () => onSelected(wallets[index].wallet.id),
+          Semantics(
+            button: true,
+            label: 'Kembali',
+            child: GestureDetector(
+              onTap: onBack,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                width: AppSpacing.iconTile,
+                height: AppSpacing.iconTile,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkSurfaceSoft
+                      : AppColors.surfaceSoft,
+                  borderRadius: BorderRadius.circular(AppRadius.full),
+                ),
+                child: Icon(
+                  Icons.arrow_back_rounded,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
             ),
-            if (index != wallets.length - 1)
-              const SizedBox(width: AppSpacing.sm),
+          ),
+          const SizedBox(width: AppSpacing.lg),
+          Expanded(child: Text(title, style: theme.textTheme.headlineSmall)),
+        ],
+      ),
+    );
+  }
+}
+
+class _AmountCard extends StatelessWidget {
+  const _AmountCard({
+    required this.amountText,
+    required this.isEmpty,
+    required this.helper,
+    required this.accentColor,
+    required this.showKeypad,
+    required this.onToggleKeypad,
+    required this.onDigitPressed,
+    required this.onBackspacePressed,
+  });
+
+  final String amountText;
+  final bool isEmpty;
+  final String helper;
+  final Color accentColor;
+  final bool showKeypad;
+  final VoidCallback onToggleKeypad;
+  final ValueChanged<String> onDigitPressed;
+  final VoidCallback onBackspacePressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.colorScheme.brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceElevated : AppColors.surfaceSoft,
+        borderRadius: BorderRadius.circular(AppRadius.xxl),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorderSubtle : AppColors.borderSubtle,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Nominal', style: theme.textTheme.labelLarge),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: isDark ? 0.18 : 0.10),
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                ),
+                child: Text(
+                  'Rp IDR',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: accentColor,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      amountText,
+                      maxLines: 1,
+                      style: theme.textTheme.displayMedium?.copyWith(
+                        color: isEmpty
+                            ? theme.colorScheme.onSurfaceVariant
+                            : accentColor,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Semantics(
+                button: true,
+                label: showKeypad ? 'Sembunyikan tombol angka' : 'Tampilkan tombol angka',
+                child: GestureDetector(
+                  onTap: onToggleKeypad,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    width: AppSpacing.iconTile,
+                    height: AppSpacing.iconTile,
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(
+                        alpha: showKeypad ? 0.22 : 0.12,
+                      ),
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                    ),
+                    child: Icon(Icons.dialpad_rounded, color: accentColor),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(helper, style: theme.textTheme.labelSmall),
+          if (showKeypad) ...[
+            const SizedBox(height: AppSpacing.lg),
+            AmountKeypad(
+              accentColor: accentColor,
+              onDigitPressed: onDigitPressed,
+              onBackspacePressed: onBackspacePressed,
+            ),
           ],
         ],
       ),
@@ -859,53 +880,25 @@ class _WalletChipRow extends StatelessWidget {
   }
 }
 
-class _DateTimePicker extends StatelessWidget {
-  const _DateTimePicker({
-    required this.selectedOption,
-    required this.selectedDateTime,
-    required this.onSelected,
-  });
+class _FormSectionLabel extends StatelessWidget {
+  const _FormSectionLabel(this.label);
 
-  final String selectedOption;
-  final String selectedDateTime;
-  final ValueChanged<String> onSelected;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    const dateOptions = ['Hari ini', 'Kemarin', 'Pilih tanggal', 'Pilih waktu'];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SheetSectionTitle(
-          title: 'Tanggal & Waktu',
-          subtitle: selectedDateTime,
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          clipBehavior: Clip.hardEdge,
-          child: Row(
-            children: [
-              for (var index = 0; index < dateOptions.length; index++) ...[
-                DateChoiceChip(
-                  label: dateOptions[index],
-                  selected: selectedOption == dateOptions[index],
-                  onSelected: () => onSelected(dateOptions[index]),
-                ),
-                if (index != dateOptions.length - 1)
-                  const SizedBox(width: AppSpacing.sm),
-              ],
-            ],
-          ),
-        ),
-      ],
+    return Text(
+      label.toUpperCase(),
+      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+        letterSpacing: 1.2,
+        fontWeight: FontWeight.w800,
+      ),
     );
   }
 }
 
-class _NoteField extends StatelessWidget {
-  const _NoteField({required this.controller});
+class _TitleField extends StatelessWidget {
+  const _TitleField({required this.controller});
 
   final TextEditingController controller;
 
@@ -914,47 +907,319 @@ class _NoteField extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.colorScheme.brightness == Brightness.dark;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SheetSectionTitle(
-          title: 'Catatan',
-          subtitle: 'Opsional, boleh dikosongkan.',
+    return TextField(
+      controller: controller,
+      maxLength: 120,
+      cursorColor: theme.colorScheme.primary,
+      style: theme.textTheme.bodyLarge,
+      decoration: InputDecoration(
+        counterText: '',
+        hintText: 'Judul (mis. Makan siang)',
+        hintStyle: theme.textTheme.bodyMedium,
+        prefixIcon: Icon(
+          Icons.edit_note_rounded,
+          color: isDark ? AppColors.softMint : AppColors.primary,
         ),
-        const SizedBox(height: AppSpacing.lg),
-        TextField(
-          controller: controller,
-          minLines: 2,
-          maxLines: 3,
-          maxLength: 120,
-          cursorColor: theme.colorScheme.primary,
-          style: theme.textTheme.bodyLarge,
-          decoration: InputDecoration(
-            counterText: '',
-            hintText: 'Contoh: makan siang, bayar listrik',
-            hintStyle: theme.textTheme.bodyMedium,
-            filled: true,
-            fillColor: isDark
-                ? AppColors.darkSurfaceSoft
-                : AppColors.surfaceSoft,
-            contentPadding: const EdgeInsets.all(AppSpacing.lg),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: AppRadius.input,
-              borderSide: BorderSide(
-                color: isDark
-                    ? AppColors.darkBorderSubtle
-                    : AppColors.borderSubtle,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: AppRadius.input,
-              borderSide: BorderSide(
-                color: theme.colorScheme.primary.withValues(alpha: 0.46),
-              ),
-            ),
+        filled: true,
+        fillColor: isDark ? AppColors.darkSurfaceElevated : AppColors.surfaceSoft,
+        contentPadding: const EdgeInsets.all(AppSpacing.lg),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderSide: BorderSide(
+            color: isDark ? AppColors.darkBorderSubtle : AppColors.borderSubtle,
           ),
         ),
-      ],
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderSide: BorderSide(
+            color: theme.colorScheme.primary.withValues(alpha: 0.46),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FormCard extends StatelessWidget {
+  const _FormCard({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).colorScheme.brightness == Brightness.dark;
+    final border = isDark ? AppColors.darkBorderSubtle : AppColors.borderSubtle;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceElevated : AppColors.surfaceSoft,
+        borderRadius: BorderRadius.circular(AppRadius.xxl),
+        border: Border.all(color: border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (var index = 0; index < children.length; index++) ...[
+            if (index > 0) Divider(height: 1, color: border),
+            children[index],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PickerRow extends StatelessWidget {
+  const _PickerRow({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.value,
+    required this.onTap,
+    this.caption,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String label;
+  final String value;
+  final String? caption;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.colorScheme.brightness == Brightness.dark;
+
+    return PressableSurface(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: isDark ? 0.18 : 0.10),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: theme.textTheme.labelMedium),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    value,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  if (caption != null) ...[
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(caption!, style: theme.textTheme.labelSmall),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkSurfaceSoft
+                    : AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CategorySheet extends StatelessWidget {
+  const _CategorySheet({
+    required this.categories,
+    required this.type,
+    required this.selectedId,
+    required this.onSelected,
+  });
+
+  final List<CategoryEntry> categories;
+  final TransactionType type;
+  final int? selectedId;
+  final ValueChanged<CategoryEntry> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final maxHeight = MediaQuery.of(context).size.height * 0.8;
+
+    final frequent = <CategoryEntry>[];
+    for (final name in _frequentLabels(type)) {
+      for (final category in categories) {
+        if (category.name == name) {
+          frequent.add(category);
+          break;
+        }
+      }
+    }
+    final grouped = <String, List<CategoryEntry>>{};
+    for (final category in categories) {
+      grouped.putIfAbsent(category.groupName, () => []).add(category);
+    }
+
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            0,
+            AppSpacing.screen,
+            AppSpacing.xl,
+          ),
+          children: [
+            Text('Pilih kategori', style: theme.textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.sm),
+            if (frequent.isNotEmpty) ..._section(context, 'Sering dipakai', frequent),
+            for (final entry in grouped.entries)
+              ..._section(context, entry.key, entry.value),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _section(
+    BuildContext context,
+    String title,
+    List<CategoryEntry> items,
+  ) {
+    final theme = Theme.of(context);
+
+    return [
+      Padding(
+        padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.xs),
+        child: Text(title, style: theme.textTheme.labelLarge),
+      ),
+      for (final item in items)
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(categoryIconForEntry(item), color: Color(item.colorValue)),
+          title: Text(item.name),
+          trailing: selectedId == item.id
+              ? Icon(Icons.check_rounded, color: theme.colorScheme.primary)
+              : null,
+          onTap: () => onSelected(item),
+        ),
+    ];
+  }
+}
+
+class _WalletSheet extends StatelessWidget {
+  const _WalletSheet({
+    required this.title,
+    required this.wallets,
+    required this.selectedId,
+    required this.onSelected,
+  });
+
+  final String title;
+  final List<WalletBalance> wallets;
+  final int? selectedId;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final maxHeight = MediaQuery.of(context).size.height * 0.7;
+
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            0,
+            AppSpacing.screen,
+            AppSpacing.xl,
+          ),
+          children: [
+            Text(title, style: theme.textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.sm),
+            for (final item in wallets)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  _walletIcon(item.wallet.type),
+                  color: theme.colorScheme.primary,
+                ),
+                title: Text(item.wallet.name),
+                subtitle: Text('Saldo ${CurrencyFormatter.rupiah(item.balance)}'),
+                trailing: selectedId == item.wallet.id
+                    ? Icon(Icons.check_rounded, color: theme.colorScheme.primary)
+                    : null,
+                onTap: () => onSelected(item.wallet.id),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DateSheet extends StatelessWidget {
+  const _DateSheet({required this.selectedOption, required this.onSelected});
+
+  final String selectedOption;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    const options = ['Hari ini', 'Kemarin', 'Pilih tanggal', 'Pilih waktu'];
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.screen,
+          0,
+          AppSpacing.screen,
+          AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Tanggal & waktu', style: theme.textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.sm),
+            for (final option in options)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(option),
+                trailing: selectedOption == option
+                    ? Icon(Icons.check_rounded, color: theme.colorScheme.primary)
+                    : null,
+                onTap: () => onSelected(option),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

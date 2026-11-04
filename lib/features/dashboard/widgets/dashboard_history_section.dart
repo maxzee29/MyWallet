@@ -139,12 +139,8 @@ class _DashboardHistorySectionState
             date: day,
             items: groups[day]!,
             hideBalance: widget.hideBalance,
-            onItemTap: (item) => showTransactionDetailSheet(
-              context,
-              ref,
-              item,
-              widget.hideBalance,
-            ),
+            onItemTap: (item) =>
+                openTransactionDetail(context, item, widget.hideBalance),
           ),
           const SizedBox(height: AppSpacing.lg),
         ],

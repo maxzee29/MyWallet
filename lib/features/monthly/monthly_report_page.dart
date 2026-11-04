@@ -405,8 +405,7 @@ class _MonthlyReportPageState extends ConsumerState<MonthlyReportPage> {
           MonthlyTransactionTile(
             detail: item,
             hideBalance: hideBalance,
-            onTap: () =>
-                showTransactionDetailSheet(context, ref, item, hideBalance),
+            onTap: () => openTransactionDetail(context, item, hideBalance),
             onLongPress: () => confirmDeleteTransaction(context, ref, item),
           ),
           const SizedBox(height: AppSpacing.md),

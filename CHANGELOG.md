@@ -2,6 +2,12 @@
 
 All notable changes to FadDompet are documented in this file.
 
+## [1.4.2]
+
+- Replaced the transaction detail sheet with a full detail page: colored title and amount card, a details list for category, wallet and date, and delete and edit buttons in the header.
+- Redesigned the add and edit transaction form: back-arrow header, amount card with a keypad toggle, title field, and picker rows for category, wallet and date and time that open selection sheets.
+- Bumped the app version to 1.4.2.
+
 ## [1.4.1]
 
 - Added an optional admin fee when creating a transfer. The fee is deducted from the source wallet and recorded as a separate expense in the Biaya Admin category.

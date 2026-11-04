@@ -37,7 +37,7 @@ void main() {
 
     expect(find.text('Total Saldo'), findsOneWidget);
     expect(find.text('Ringkasan bulan ini'), findsOneWidget);
-    expect(find.text('Riwayat terbaru'), findsOneWidget);
+    expect(find.text('Riwayat Transaksi'), findsOneWidget);
   });
 }
 

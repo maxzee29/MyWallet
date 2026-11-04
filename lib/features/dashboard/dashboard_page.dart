@@ -6,17 +6,14 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_shadows.dart';
 import '../../app/theme/app_spacing.dart';
-import '../../core/enums/transaction_type.dart';
 import '../../core/formatters/currency_formatter.dart';
 import '../../core/formatters/date_formatter.dart';
 import '../../data/repositories/app_models.dart';
 import '../../shared/components/balance_hero_card.dart';
 import '../../shared/components/insight_card.dart';
 import '../../shared/components/section_header.dart';
-import '../../shared/helpers/category_icon_mapper.dart';
-import '../../shared/widgets/empty_state.dart';
 import '../monthly/monthly_report_page.dart';
-import '../transactions/widgets/transaction_tile.dart';
+import 'widgets/dashboard_history_section.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key, this.onOpenReport});
@@ -83,14 +80,11 @@ class DashboardPage extends ConsumerWidget {
                       message: _insightMessage(data),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
-                    const SectionHeader(
-                      title: 'Riwayat terbaru',
-                      subtitle: 'Transaksi terakhir akan muncul di sini',
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _RecentTransactionsCard(
-                      transactions: data.recentTransactions,
+                    DashboardHistorySection(
                       hideBalance: hideBalance,
+                      onSeeAll:
+                          onOpenReport ??
+                          (() => MonthlyReportPage.open(context)),
                     ),
                   ],
                 ),
@@ -439,97 +433,4 @@ class _MiniStatusRow extends StatelessWidget {
       ],
     );
   }
-}
-
-class _RecentTransactionsCard extends StatelessWidget {
-  const _RecentTransactionsCard({
-    required this.transactions,
-    required this.hideBalance,
-  });
-
-  final List<TransactionDetail> transactions;
-  final bool hideBalance;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final brightness = theme.colorScheme.brightness;
-    final isDark = brightness == Brightness.dark;
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurfaceElevated : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.xxl),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorderSubtle : AppColors.borderSubtle,
-        ),
-        boxShadow: AppShadows.soft(brightness),
-      ),
-      child: transactions.isEmpty
-          ? const EmptyState(
-              compact: true,
-              icon: Icons.receipt_long_rounded,
-              title: 'Belum ada transaksi',
-              message:
-                  'Tambahkan transaksi pertama untuk mulai melihat riwayat keuanganmu.',
-            )
-          : Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                children: [
-                  for (var index = 0; index < transactions.length; index++) ...[
-                    _tile(transactions[index], hideBalance),
-                    if (index != transactions.length - 1)
-                      const SizedBox(height: AppSpacing.md),
-                  ],
-                ],
-              ),
-            ),
-    );
-  }
-}
-
-TransactionTile _tile(TransactionDetail detail, bool hideBalance) {
-  final transaction = detail.transaction;
-  final type = _previewType(detail.type);
-  final title = detail.type == TransactionType.transfer
-      ? '${detail.wallet.name} ke ${detail.transferWallet?.name ?? 'Dompet'}'
-      : detail.category?.name ?? 'Transaksi';
-  final subtitle = detail.type == TransactionType.transfer
-      ? 'Transfer antar dompet'
-      : detail.wallet.name;
-
-  return TransactionTile(
-    title: title,
-    subtitle: subtitle,
-    timeLabel: DateFormatter.dateTimeLabel(transaction.date),
-    amount: CurrencyFormatter.rupiah(transaction.amount, hidden: hideBalance),
-    type: type,
-    icon: _transactionIcon(detail),
-  );
-}
-
-TransactionPreviewType _previewType(TransactionType type) {
-  switch (type) {
-    case TransactionType.income:
-      return TransactionPreviewType.income;
-    case TransactionType.expense:
-      return TransactionPreviewType.expense;
-    case TransactionType.transfer:
-      return TransactionPreviewType.transfer;
-  }
-}
-
-IconData _transactionIcon(TransactionDetail detail) {
-  if (detail.type == TransactionType.transfer) {
-    return Icons.swap_horiz_rounded;
-  }
-  if (detail.category != null) {
-    return categoryIconForEntry(detail.category);
-  }
-  if (detail.type == TransactionType.income) {
-    return Icons.work_rounded;
-  }
-  return Icons.category_rounded;
 }

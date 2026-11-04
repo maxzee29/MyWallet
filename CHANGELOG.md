@@ -6,6 +6,7 @@ All notable changes to FadDompet are documented in this file.
 
 - Added an optional admin fee when creating a transfer. The fee is deducted from the source wallet and recorded as a separate expense in the Biaya Admin category.
 - Redesigned the Keluar and Masuk report tabs: colored total card with comparison to the previous period, donut chart with legend, group toggle, trend chart, and category details.
+- Redesigned the dashboard transaction history: type filter chips, one card per day with a daily total, and icon rows showing note, category, wallet and time.
 - Bumped the app version to 1.4.1.
 
 ## [Unreleased]

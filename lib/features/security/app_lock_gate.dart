@@ -1,3 +1,4 @@
+import '../../app/theme/app_accent.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -299,9 +300,7 @@ class _AppLockScreenState extends ConsumerState<_AppLockScreen> {
                           height: AppSpacing.md,
                           decoration: BoxDecoration(
                             color: index < _pin.length
-                                ? (isDark
-                                      ? AppColors.softMint
-                                      : AppColors.primary)
+                                ? context.accent.color
                                 : theme.colorScheme.outline,
                             borderRadius: BorderRadius.circular(AppRadius.full),
                           ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/theme/app_accent.dart';
 import '../../app/providers/app_providers.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_durations.dart';
@@ -918,7 +919,7 @@ class _TitleField extends StatelessWidget {
         hintStyle: theme.textTheme.bodyMedium,
         prefixIcon: Icon(
           Icons.edit_note_rounded,
-          color: isDark ? AppColors.softMint : AppColors.primary,
+          color: context.accent.color,
         ),
         filled: true,
         fillColor: isDark ? AppColors.darkSurfaceElevated : AppColors.surfaceSoft,
@@ -1276,11 +1277,11 @@ class _SheetFooter extends StatelessWidget {
               ),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isDark ? AppColors.softMint : AppColors.primary,
+                color: context.accent.color,
                 borderRadius: BorderRadius.circular(AppRadius.lg),
                 boxShadow: [
                   BoxShadow(
-                    color: (isDark ? AppColors.softMint : AppColors.primary)
+                    color: context.accent.color
                         .withValues(alpha: isDark ? 0.18 : 0.14),
                     blurRadius: AppSpacing.xxl,
                     offset: const Offset(0, AppSpacing.md),

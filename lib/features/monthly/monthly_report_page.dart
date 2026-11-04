@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/theme/app_accent.dart';
 import '../../app/providers/app_providers.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
@@ -536,7 +537,7 @@ class _WalletFilterButton extends StatelessWidget {
           children: [
             Icon(
               Icons.account_balance_wallet_rounded,
-              color: isDark ? AppColors.softMint : AppColors.primary,
+              color: context.accent.color,
               size: 22,
             ),
             const SizedBox(width: AppSpacing.md),
@@ -694,9 +695,8 @@ class _ArrowButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.colorScheme.brightness == Brightness.dark;
     final color = enabled
-        ? (isDark ? AppColors.softMint : AppColors.primary)
+        ? context.accent.color
         : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.38);
 
     return Semantics(

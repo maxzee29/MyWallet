@@ -8,6 +8,7 @@ import '../../app/providers/app_providers.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
+import '../../app/theme/theme_preference.dart';
 import '../../core/enums/category_type.dart';
 import '../../data/local/database/app_database.dart';
 import '../../shared/helpers/category_icon_mapper.dart';
@@ -19,6 +20,7 @@ import '../../shared/widgets/pressable_surface.dart';
 import '../../shared/widgets/top_toast.dart';
 import '../analytics/analytics_page.dart';
 import 'widgets/app_update_sheet.dart';
+import 'widgets/theme_sheet.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -59,9 +61,8 @@ class SettingsPage extends ConsumerWidget {
           _SettingsTile(
             icon: Icons.dark_mode_rounded,
             title: 'Tampilan',
-            subtitle: _themeLabel(settings?.themeMode ?? 'system'),
-            onTap: () =>
-                _showThemeSheet(context, ref, settings?.themeMode ?? 'system'),
+            subtitle: ThemePreference.parse(settings?.themeMode).summary,
+            onTap: () => _showThemeSheet(context),
           ),
           _SettingsTile(
             icon: Icons.visibility_off_rounded,
@@ -150,7 +151,7 @@ class SettingsPage extends ConsumerWidget {
           _SettingsTile(
             icon: Icons.system_update_alt_rounded,
             title: 'Pembaruan Aplikasi',
-            subtitle: 'Periksa dan unduh versi terbaru FadDompet.',
+            subtitle: 'Periksa dan unduh versi terbaru MyWallet.',
             onTap: () => _showUpdateSheet(context),
           ),
           _SettingsTile(
@@ -164,45 +165,13 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  void _showThemeSheet(BuildContext context, WidgetRef ref, String selected) {
+  void _showThemeSheet(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.screen),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _SheetOption(
-                title: 'Ikuti perangkat',
-                selected: selected == 'system',
-                onTap: () => _setTheme(context, ref, 'system'),
-              ),
-              _SheetOption(
-                title: 'Terang',
-                selected: selected == 'light',
-                onTap: () => _setTheme(context, ref, 'light'),
-              ),
-              _SheetOption(
-                title: 'Gelap',
-                selected: selected == 'dark',
-                onTap: () => _setTheme(context, ref, 'dark'),
-              ),
-            ],
-          ),
-        ),
-      ),
+      builder: (context) => const ThemeSheet(),
     );
-  }
-
-  Future<void> _setTheme(
-    BuildContext context,
-    WidgetRef ref,
-    String value,
-  ) async {
-    await ref.read(settingsRepositoryProvider).setThemeMode(value);
-    if (context.mounted) Navigator.pop(context);
   }
 
   void _showSecuritySheet(BuildContext context) {
@@ -1496,17 +1465,6 @@ class _CategoryFormResult {
   final String groupName;
   final CategoryType type;
   final int colorValue;
-}
-
-String _themeLabel(String value) {
-  switch (value) {
-    case 'light':
-      return 'Terang';
-    case 'dark':
-      return 'Gelap';
-    default:
-      return 'Ikuti perangkat';
-  }
 }
 
 String _autoLockLabel(int value) {

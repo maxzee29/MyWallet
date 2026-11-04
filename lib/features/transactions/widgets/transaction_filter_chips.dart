@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_accent.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_durations.dart';
 import '../../../app/theme/app_radius.dart';
@@ -36,7 +37,7 @@ class TransactionFilterChips extends StatelessWidget {
                     _FilterChipButton(
                       label: labels[index],
                       selected: selectedIndex == index,
-                      accentColor: _accentForLabel(labels[index]),
+                      accentColor: _accentForLabel(labels[index], context.accent.color),
                       onTap: () => onChanged(index),
                     ),
                     if (index != labels.length - 1)
@@ -113,7 +114,7 @@ class _FilterChipButton extends StatelessWidget {
   }
 }
 
-Color _accentForLabel(String label) {
+Color _accentForLabel(String label, Color fallback) {
   switch (label) {
     case 'Pemasukan':
       return AppColors.incomeGreen;
@@ -122,6 +123,6 @@ Color _accentForLabel(String label) {
     case 'Transfer':
       return AppColors.infoBlue;
     default:
-      return AppColors.primary;
+      return fallback;
   }
 }

@@ -2,7 +2,7 @@ name: faddompet
 description: "FadDompet is an offline-first personal money management app."
 publish_to: "none"
 
-version: 1.4.2+5002
+version: 1.4.3+5003
 
 environment:
   sdk: ^3.12.2

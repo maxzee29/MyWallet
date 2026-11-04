@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_accent.dart';
 import '../../../app/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radius.dart';
@@ -75,7 +76,7 @@ class TransactionDetailPage extends ConsumerWidget {
     final date = current.transaction.date;
     final dateText =
         '${ReportDateFormatter.fullDayLong(date)} • ${ReportDateFormatter.time(date)}';
-    final iconColor = isDark ? AppColors.softMint : AppColors.primary;
+    final iconColor = context.accent.color;
 
     return Scaffold(
       body: SafeArea(

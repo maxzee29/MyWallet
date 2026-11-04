@@ -2,6 +2,13 @@
 
 All notable changes to FadDompet are documented in this file.
 
+## [1.4.3]
+
+- Added a Material You option in Tampilan: accent colors follow the Android 12+ wallpaper palette. Surfaces and income/expense colors keep the app palette.
+- Added an option to hide the labels under the bottom menu icons.
+- Renamed the remaining FadDompet texts in the update check to MyWallet.
+- Bumped the app version to 1.4.3.
+
 ## [1.4.2]
 
 - Replaced the transaction detail sheet with a full detail page: colored title and amount card, a details list for category, wallet and date, and delete and edit buttons in the header.

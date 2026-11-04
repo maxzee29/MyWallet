@@ -25,10 +25,10 @@ class AppShadows {
     ];
   }
 
-  static List<BoxShadow> hero(Brightness brightness) {
+  static List<BoxShadow> hero(Brightness brightness, {Color? tint}) {
     final color = brightness == Brightness.dark
         ? Colors.black.withValues(alpha: 0.30)
-        : AppColors.primary.withValues(alpha: 0.16);
+        : (tint ?? AppColors.primary).withValues(alpha: 0.16);
 
     return [
       BoxShadow(color: color, blurRadius: 28, offset: const Offset(0, 16)),

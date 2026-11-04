@@ -136,7 +136,7 @@ class UpdateRepository {
             latestReleaseUri,
             headers: const {
               'Accept': 'application/vnd.github+json',
-              'User-Agent': 'FadDompet',
+              'User-Agent': 'MyWallet',
             },
           )
           .timeout(_timeout);
@@ -180,7 +180,7 @@ class UpdateRepository {
 
     try {
       final request = http.Request('GET', Uri.parse(asset.downloadUrl))
-        ..headers['User-Agent'] = 'FadDompet';
+        ..headers['User-Agent'] = 'MyWallet';
       final response = await _client.send(request).timeout(_timeout);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw const AppUpdateException(
@@ -188,7 +188,7 @@ class UpdateRepository {
         );
       }
 
-      final fileName = 'FadDompet-v$latestVersion-arm64.apk';
+      final fileName = 'MyWallet-v$latestVersion-arm64.apk';
       final savedFile = await _fileHandler.saveApk(
         fileName: fileName,
         stream: response.stream,

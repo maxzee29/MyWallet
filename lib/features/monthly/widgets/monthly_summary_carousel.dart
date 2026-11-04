@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_accent.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
@@ -73,7 +74,7 @@ class _MonthlySummaryCarouselState extends State<MonthlySummaryCarousel> {
       _CarouselCard(
         title: 'Masuk & Keluar',
         icon: Icons.swap_vert_rounded,
-        colors: const [AppColors.primary, AppColors.primaryDark],
+        colors: [context.accent.gradientStart, context.accent.gradientMid],
         footer: '${report.transactions.length} transaksi tercatat',
         child: Row(
           children: [

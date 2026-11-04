@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_accent.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_shadows.dart';
@@ -18,9 +19,7 @@ class MonthlyInsightCard extends StatelessWidget {
     final isDark = brightness == Brightness.dark;
     final accent = switch (insight.tone) {
       MonthlyInsightTone.positive => AppColors.incomeGreen,
-      MonthlyInsightTone.neutral => isDark
-          ? AppColors.softMint
-          : AppColors.primary,
+      MonthlyInsightTone.neutral => context.accent.color,
       MonthlyInsightTone.warning => AppColors.warningOrange,
     };
     final icon = switch (insight.tone) {

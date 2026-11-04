@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/providers/theme_providers.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_shadows.dart';
@@ -12,14 +14,14 @@ import '../../features/wallets/wallets_page.dart';
 import '../components/add_transaction_sheet.dart';
 import '../widgets/premium_bottom_nav.dart';
 
-class MainShell extends StatefulWidget {
+class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
 
   late final List<Widget> _pages = [
@@ -45,6 +47,7 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final showNavLabels = ref.watch(themePreferenceProvider).showNavLabels;
     final navItems = const [
       PremiumBottomNavItem(
         icon: Icons.home_outlined,
@@ -127,6 +130,7 @@ class _MainShellState extends State<MainShell> {
                         currentIndex: _currentIndex,
                         items: navItems,
                         onAddPressed: _showQuickAddSheet,
+                        showLabels: showNavLabels,
                         onChanged: (index) {
                           setState(() => _currentIndex = index);
                         },

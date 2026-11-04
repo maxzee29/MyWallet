@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_accent.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_shadows.dart';
@@ -35,13 +36,12 @@ class InsightCard extends StatelessWidget {
             width: AppSpacing.iconTile,
             height: AppSpacing.iconTile,
             decoration: BoxDecoration(
-              color: (isDark ? AppColors.softMint : AppColors.surfaceMint)
-                  .withValues(alpha: isDark ? 0.18 : 1),
+              color: context.accent.container,
               borderRadius: BorderRadius.circular(AppRadius.lg),
             ),
             child: Icon(
               Icons.lightbulb_outline_rounded,
-              color: isDark ? AppColors.softMint : AppColors.primary,
+              color: context.accent.color,
               size: 22,
             ),
           ),

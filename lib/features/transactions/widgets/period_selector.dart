@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_accent.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_durations.dart';
 import '../../../app/theme/app_radius.dart';
@@ -95,7 +96,7 @@ class _PeriodButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.colorScheme.brightness == Brightness.dark;
-    final activeColor = isDark ? AppColors.softMint : AppColors.primary;
+    final activeColor = context.accent.color;
 
     return Semantics(
       button: true,

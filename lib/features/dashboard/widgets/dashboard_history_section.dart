@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_accent.dart';
 import '../../../app/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radius.dart';
@@ -44,7 +45,6 @@ class _DashboardHistorySectionState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.colorScheme.brightness == Brightness.dark;
     final transactions = ref.watch(transactionDetailsProvider);
 
     return Column(
@@ -54,7 +54,7 @@ class _DashboardHistorySectionState
           children: [
             Icon(
               Icons.receipt_long_rounded,
-              color: isDark ? AppColors.softMint : AppColors.primary,
+              color: context.accent.color,
               size: 24,
             ),
             const SizedBox(width: AppSpacing.md),
@@ -74,7 +74,7 @@ class _DashboardHistorySectionState
                 child: Text(
                   'Lihat semua',
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: isDark ? AppColors.softMint : AppColors.primary,
+                    color: context.accent.color,
                   ),
                 ),
               ),

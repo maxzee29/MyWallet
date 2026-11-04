@@ -7,6 +7,7 @@ import '../features/security/app_lock_gate.dart';
 import '../shared/layouts/main_shell.dart';
 import '../shared/widgets/loading_state.dart';
 import 'providers/app_providers.dart';
+import 'providers/theme_providers.dart';
 import 'theme/app_theme.dart';
 
 class FadDompetApp extends ConsumerWidget {
@@ -14,16 +15,19 @@ class FadDompetApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref
-        .watch(appSettingsProvider)
+    final preference = ref.watch(themePreferenceProvider);
+    final systemPalette = ref
+        .watch(systemPaletteProvider)
         .maybeWhen(data: (value) => value, orElse: () => null);
+    // Warna dinamis hanya dipakai jika diaktifkan dan perangkat mendukung.
+    final palette = preference.dynamicColor ? systemPalette : null;
 
     return MaterialApp(
       title: 'MyWallet',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: _themeMode(settings?.themeMode),
+      theme: palette == null ? AppTheme.light : AppTheme.dynamicLight(palette),
+      darkTheme: palette == null ? AppTheme.dark : AppTheme.dynamicDark(palette),
+      themeMode: preference.mode,
       builder: (context, child) {
         final brightness = Theme.of(context).colorScheme.brightness;
         final isDark = brightness == Brightness.dark;
@@ -46,16 +50,6 @@ class FadDompetApp extends ConsumerWidget {
     );
   }
 
-  ThemeMode _themeMode(String? value) {
-    switch (value) {
-      case 'light':
-        return ThemeMode.light;
-      case 'dark':
-        return ThemeMode.dark;
-      default:
-        return ThemeMode.system;
-    }
-  }
 }
 
 class _AppGate extends ConsumerWidget {

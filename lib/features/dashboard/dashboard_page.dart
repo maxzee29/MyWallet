@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/theme/app_accent.dart';
 import '../../app/providers/app_providers.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
@@ -154,15 +155,13 @@ class _DashboardHeader extends StatelessWidget {
                   vertical: AppSpacing.sm,
                 ),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.softMint.withValues(alpha: 0.12)
-                      : AppColors.surfaceMint,
+                  color: context.accent.container,
                   borderRadius: BorderRadius.circular(AppRadius.full),
                 ),
                 child: Text(
                   'MyWallet',
                   style: theme.textTheme.labelMedium?.copyWith(
-                    color: isDark ? AppColors.softMint : AppColors.primary,
+                    color: context.accent.color,
                   ),
                 ),
               ),
@@ -194,7 +193,7 @@ class _DashboardHeader extends StatelessWidget {
             child: Text(
               'IDR',
               style: theme.textTheme.labelLarge?.copyWith(
-                color: isDark ? AppColors.softMint : AppColors.primary,
+                color: context.accent.color,
               ),
             ),
           ),

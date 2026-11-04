@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_accent.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_durations.dart';
 import '../../app/theme/app_radius.dart';
@@ -27,12 +28,16 @@ class PremiumBottomNav extends StatelessWidget {
     required this.items,
     required this.onChanged,
     required this.onAddPressed,
+    this.showLabels = true,
   });
 
   final int currentIndex;
   final List<PremiumBottomNavItem> items;
   final ValueChanged<int> onChanged;
   final VoidCallback onAddPressed;
+
+  /// Tampilkan tulisan di bawah ikon. Label tetap dibacakan pembaca layar.
+  final bool showLabels;
 
   @override
   Widget build(BuildContext context) {
@@ -73,22 +78,26 @@ class PremiumBottomNav extends StatelessWidget {
                       _NavItem(
                         item: items[0],
                         selected: currentIndex == 0,
+                        showLabel: showLabels,
                         onTap: () => onChanged(0),
                       ),
                       _NavItem(
                         item: items[1],
                         selected: currentIndex == 1,
+                        showLabel: showLabels,
                         onTap: () => onChanged(1),
                       ),
                       const SizedBox(width: AppSpacing.navActionSlot),
                       _NavItem(
                         item: items[2],
                         selected: currentIndex == 2,
+                        showLabel: showLabels,
                         onTap: () => onChanged(2),
                       ),
                       _NavItem(
                         item: items[3],
                         selected: currentIndex == 3,
+                        showLabel: showLabels,
                         onTap: () => onChanged(3),
                       ),
                     ],
@@ -108,18 +117,20 @@ class _NavItem extends StatelessWidget {
   const _NavItem({
     required this.item,
     required this.selected,
+    required this.showLabel,
     required this.onTap,
   });
 
   final PremiumBottomNavItem item;
   final bool selected;
+  final bool showLabel;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.colorScheme.brightness == Brightness.dark;
-    final activeColor = isDark ? AppColors.softMint : AppColors.primary;
+    final activeColor = context.accent.color;
     final inactiveColor = isDark
         ? AppColors.darkTextSecondary
         : AppColors.textSecondary;
@@ -184,16 +195,18 @@ class _NavItem extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  item.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: selected ? activeColor : inactiveColor,
-                    height: 1,
+                if (showLabel) ...[
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    item.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: selected ? activeColor : inactiveColor,
+                      height: 1,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -211,7 +224,6 @@ class _QuickAddButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.colorScheme.brightness == Brightness.dark;
 
     return Semantics(
       button: true,
@@ -225,13 +237,13 @@ class _QuickAddButton extends StatelessWidget {
             height: AppSpacing.navActionSize,
             margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.softMint : AppColors.primary,
+              color: context.accent.color,
               borderRadius: BorderRadius.circular(AppRadius.hero),
               boxShadow: [...AppShadows.nav(theme.colorScheme.brightness)],
             ),
             child: Icon(
               Icons.add_rounded,
-              color: isDark ? AppColors.darkBackground : AppColors.onDark,
+              color: context.accent.onColor,
               size: AppSpacing.xxl,
             ),
           ),

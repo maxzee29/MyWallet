@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_accent.dart';
 import '../../app/theme/app_spacing.dart';
 
 class SectionHeader extends StatelessWidget {
@@ -49,9 +49,7 @@ class SectionHeader extends StatelessWidget {
               child: Text(
                 actionLabel!,
                 style: theme.textTheme.labelLarge?.copyWith(
-                  color: theme.colorScheme.brightness == Brightness.dark
-                      ? AppColors.softMint
-                      : AppColors.primary,
+                  color: context.accent.color,
                 ),
               ),
             ),

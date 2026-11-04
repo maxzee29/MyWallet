@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_accent.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_shadows.dart';
@@ -50,15 +51,13 @@ class EmptyState extends StatelessWidget {
             width: compact ? 54 : 66,
             height: compact ? 54 : 66,
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.softMint.withValues(alpha: 0.14)
-                  : AppColors.surfaceMint,
+              color: context.accent.container,
               borderRadius: BorderRadius.circular(AppRadius.xl),
             ),
             child: Icon(
               icon,
               size: compact ? 27 : 32,
-              color: isDark ? AppColors.softMint : AppColors.primary,
+              color: context.accent.color,
             ),
           ),
           SizedBox(height: compact ? AppSpacing.lg : AppSpacing.xl),

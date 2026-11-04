@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/theme/app_accent.dart';
 import '../../app/providers/app_providers.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
@@ -281,7 +282,7 @@ class _PeriodChip extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: selected
-              ? (isDark ? AppColors.softMint : AppColors.primary)
+              ? context.accent.color
               : (isDark ? AppColors.darkSurfaceElevated : AppColors.surface),
           borderRadius: BorderRadius.circular(AppRadius.full),
           border: Border.all(

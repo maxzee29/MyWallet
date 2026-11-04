@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_accent.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_shadows.dart';
@@ -149,7 +150,7 @@ class MonthlyGroupToggle extends StatelessWidget {
         children: [
           Icon(
             Icons.account_tree_rounded,
-            color: isDark ? AppColors.softMint : AppColors.primary,
+            color: context.accent.color,
           ),
           const SizedBox(width: AppSpacing.lg),
           Expanded(

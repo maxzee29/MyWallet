@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'app_accent.dart';
 import 'app_colors.dart';
 import 'app_radius.dart';
 import 'app_spacing.dart';
 import 'app_typography.dart';
+import 'system_palette.dart';
 
 class AppTheme {
   const AppTheme._();
@@ -31,6 +33,7 @@ class AppTheme {
       brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: colorScheme,
+      extensions: const [AppAccent.light],
       textTheme: textTheme,
       primaryTextTheme: textTheme,
       dividerColor: AppColors.borderSubtle,
@@ -219,6 +222,7 @@ class AppTheme {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.darkBackground,
       colorScheme: colorScheme,
+      extensions: [AppAccent.dark],
       textTheme: textTheme,
       primaryTextTheme: textTheme,
       dividerColor: AppColors.darkBorderSubtle,
@@ -378,6 +382,96 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.xl,
           vertical: AppSpacing.sm,
+        ),
+      ),
+    );
+  }
+
+  /// Tema terang dengan aksen dari palet sistem Android (Material You).
+  static ThemeData dynamicLight(SystemPalette palette) {
+    return _withPalette(light, palette, Brightness.light);
+  }
+
+  /// Tema gelap dengan aksen dari palet sistem Android (Material You).
+  static ThemeData dynamicDark(SystemPalette palette) {
+    return _withPalette(dark, palette, Brightness.dark);
+  }
+
+  /// Mengganti warna aksen tema dasar dengan palet sistem. Warna permukaan,
+  /// teks, dan warna semantik (pemasukan, pengeluaran) tetap dari tema dasar.
+  static ThemeData _withPalette(
+    ThemeData base,
+    SystemPalette palette,
+    Brightness brightness,
+  ) {
+    final isDark = brightness == Brightness.dark;
+    Color tone(String set, int step) => palette.tone(set, step);
+
+    final primary = isDark ? tone('accent1', 200) : tone('accent1', 600);
+    final onPrimary = isDark ? tone('accent1', 800) : tone('accent1', 0);
+    final primaryContainer = isDark
+        ? tone('accent1', 700)
+        : tone('accent1', 100);
+    final onPrimaryContainer = isDark
+        ? tone('accent1', 100)
+        : tone('accent1', 900);
+
+    final accent = AppAccent(
+      color: primary,
+      container: isDark ? primary.withValues(alpha: 0.14) : tone('accent1', 100),
+      onColor: onPrimary,
+      gradientStart: tone('accent1', 600),
+      gradientMid: tone('accent1', 800),
+      gradientEnd: tone('accent1', 900),
+    );
+
+    final colorScheme = base.colorScheme.copyWith(
+      primary: primary,
+      onPrimary: onPrimary,
+      primaryContainer: primaryContainer,
+      onPrimaryContainer: onPrimaryContainer,
+      tertiary: isDark ? tone('accent3', 200) : tone('accent3', 600),
+    );
+
+    final disabledBackground = isDark
+        ? AppColors.darkSurfaceSoft
+        : AppColors.surfaceSoft;
+    final disabledForeground = isDark
+        ? AppColors.darkTextTertiary
+        : AppColors.textTertiary;
+
+    return base.copyWith(
+      colorScheme: colorScheme,
+      extensions: [accent],
+      filledButtonTheme: FilledButtonThemeData(
+        style: base.filledButtonTheme.style?.copyWith(
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.disabled)
+                ? disabledBackground
+                : primary;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.disabled)
+                ? disabledForeground
+                : onPrimary;
+          }),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: base.outlinedButtonTheme.style?.copyWith(
+          foregroundColor: WidgetStatePropertyAll<Color>(primary),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: base.textButtonTheme.style?.copyWith(
+          foregroundColor: WidgetStatePropertyAll<Color>(primary),
+        ),
+      ),
+      chipTheme: base.chipTheme.copyWith(
+        selectedColor: accent.container,
+        checkmarkColor: primary,
+        secondaryLabelStyle: base.chipTheme.secondaryLabelStyle?.copyWith(
+          color: primary,
         ),
       ),
     );

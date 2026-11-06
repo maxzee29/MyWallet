@@ -25,7 +25,10 @@ class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
 
   late final List<Widget> _pages = [
-    DashboardPage(onOpenReport: () => setState(() => _currentIndex = 1)),
+    DashboardPage(
+      onOpenReport: () => setState(() => _currentIndex = 1),
+      onOpenWallets: () => setState(() => _currentIndex = 2),
+    ),
     const MonthlyReportPage(),
     const WalletsPage(),
     const SettingsPage(),

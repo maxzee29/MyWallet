@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/onboarding/onboarding_page.dart';
 import '../features/security/app_lock_gate.dart';
 import '../shared/layouts/main_shell.dart';
+import '../l10n/app_language.dart';
+import '../l10n/language_root.dart';
 import '../shared/widgets/loading_state.dart';
 import 'providers/app_providers.dart';
 import 'providers/theme_providers.dart';
@@ -21,6 +23,10 @@ class FadDompetApp extends ConsumerWidget {
         .maybeWhen(data: (value) => value, orElse: () => null);
     // Warna dinamis hanya dipakai jika diaktifkan dan perangkat mendukung.
     final palette = preference.dynamicColor ? systemPalette : null;
+
+    // Bahasa dibaca dari mana saja lewat AppLocale, jadi perbarui sebelum
+    // widget di bawahnya dibangun.
+    AppLocale.current = preference.language;
 
     return MaterialApp(
       title: 'MyWallet',
@@ -43,7 +49,10 @@ class FadDompetApp extends ConsumerWidget {
                 ? Brightness.light
                 : Brightness.dark,
           ),
-          child: child ?? const SizedBox.shrink(),
+          child: AppLanguageRoot(
+            language: preference.language,
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
       home: const AppLockGate(child: _AppGate()),

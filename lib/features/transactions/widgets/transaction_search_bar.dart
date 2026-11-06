@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/tr.dart';
 import '../../../app/theme/app_spacing.dart';
 
 class TransactionSearchBar extends StatelessWidget {
@@ -25,8 +26,8 @@ class TransactionSearchBar extends StatelessWidget {
         onChanged: onChanged,
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
-          labelText: 'Cari transaksi',
-          hintText: 'Nama, catatan, atau dompet',
+          labelText: tr('Cari transaksi'),
+          hintText: tr('Nama, catatan, atau dompet'),
           prefixIcon: Icon(
             Icons.search_rounded,
             size: AppSpacing.xl,

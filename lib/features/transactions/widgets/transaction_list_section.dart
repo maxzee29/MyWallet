@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 
+import '../../../l10n/app_text.dart';
 import '../../../app/theme/app_spacing.dart';
 import 'transaction_tile.dart';
 

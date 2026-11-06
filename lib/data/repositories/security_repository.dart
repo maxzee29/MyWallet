@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 
+import '../../l10n/tr.dart';
+
 class SecuritySettings {
   const SecuritySettings({
     required this.pinEnabled,
@@ -156,7 +158,7 @@ class SecurityRepository {
       throw ArgumentError('Biometrik tidak tersedia di perangkat ini.');
     }
     return _localAuth.authenticate(
-      localizedReason: 'Buka MyWallet dengan biometrik',
+      localizedReason: tr('Buka MyWallet dengan biometrik'),
       biometricOnly: true,
       persistAcrossBackgrounding: false,
     );

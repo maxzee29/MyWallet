@@ -1,8 +1,9 @@
+import '../../l10n/app_text.dart';
 import '../../app/theme/app_accent.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

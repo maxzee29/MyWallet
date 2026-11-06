@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers/app_providers.dart';
 import '../../../app/providers/theme_providers.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/theme_preference.dart';
+import '../../../l10n/app_language.dart';
+import '../../../l10n/app_text.dart';
 
 /// Pilihan tampilan: mode tema, warna dinamis (Material You), dan label menu.
 class ThemeSheet extends ConsumerWidget {
@@ -37,8 +39,13 @@ class ThemeSheet extends ConsumerWidget {
       (ThemeMode.dark, 'Gelap'),
     ];
 
+    const languages = [
+      (AppLanguage.indonesian, 'Bahasa Indonesia'),
+      (AppLanguage.english, 'English'),
+    ];
+
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.screen,
           0,
@@ -49,7 +56,7 @@ class ThemeSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Tampilan', style: theme.textTheme.titleLarge),
+            Text('Tampilan & Bahasa', style: theme.textTheme.titleLarge),
             const SizedBox(height: AppSpacing.sm),
             for (final (mode, label) in modes)
               ListTile(
@@ -59,6 +66,18 @@ class ThemeSheet extends ConsumerWidget {
                     ? Icon(Icons.check_rounded, color: theme.colorScheme.primary)
                     : null,
                 onTap: () => save(preference.copyWith(mode: mode)),
+              ),
+            const Divider(height: AppSpacing.xxl),
+            Text('Bahasa', style: theme.textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.xs),
+            for (final (language, label) in languages)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(label),
+                trailing: preference.language == language
+                    ? Icon(Icons.check_rounded, color: theme.colorScheme.primary)
+                    : null,
+                onTap: () => save(preference.copyWith(language: language)),
               ),
             const Divider(height: AppSpacing.xxl),
             SwitchListTile.adaptive(

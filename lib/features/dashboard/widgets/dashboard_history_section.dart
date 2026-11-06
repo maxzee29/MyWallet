@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/app_text.dart';
 import '../../../app/theme/app_accent.dart';
 import '../../../app/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';

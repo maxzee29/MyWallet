@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/tr.dart';
+import '../../l10n/app_text.dart';
 import '../../app/providers/app_providers.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
@@ -412,9 +414,9 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
           TextField(
             controller: _nameController,
             decoration: const InputDecoration(
-              labelText: 'Nama dompet',
-              hintText: 'Contoh: Tunai',
-              helperText: 'Gunakan nama yang mudah kamu kenali.',
+              labelText: tr('Nama dompet'),
+              hintText: tr('Contoh: Tunai'),
+              helperText: tr('Gunakan nama yang mudah kamu kenali.'),
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -436,11 +438,13 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
             keyboardType: TextInputType.number,
             inputFormatters: const [RupiahInputFormatter()],
             decoration: InputDecoration(
-              labelText: 'Saldo awal',
-              hintText: 'Rp0',
-              helperText: widget.wallet == null
-                  ? 'Opsional, boleh dikosongkan.'
-                  : 'Mengubah saldo awal akan memengaruhi saldo dompet.',
+              labelText: tr('Saldo awal'),
+              hintText: tr('Rp0'),
+              helperText: tr(
+                widget.wallet == null
+                    ? 'Opsional, boleh dikosongkan.'
+                    : 'Mengubah saldo awal akan memengaruhi saldo dompet.',
+              ),
             ),
           ),
         ],

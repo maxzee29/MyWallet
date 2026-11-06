@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 
+import '../../l10n/app_text.dart';
 import '../../app/theme/app_accent.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_durations.dart';

@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../l10n/tr.dart';
 import '../local/database/app_database.dart';
 import '../local/seed/default_seed_data.dart';
 
@@ -25,7 +26,7 @@ class BackupRepository {
     await SharePlus.instance.share(
       ShareParams(
         files: [file],
-        text: 'Cadangan MyWallet. Simpan file ini di tempat yang aman.',
+        text: tr('Cadangan MyWallet. Simpan file ini di tempat yang aman.'),
       ),
     );
     return name;
@@ -72,7 +73,7 @@ class BackupRepository {
       mimeType: 'text/csv',
     );
     await SharePlus.instance.share(
-      ShareParams(files: [file], text: 'CSV transaksi MyWallet'),
+      ShareParams(files: [file], text: tr('CSV transaksi MyWallet')),
     );
     return name;
   }

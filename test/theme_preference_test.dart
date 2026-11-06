@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:faddompet/app/theme/theme_preference.dart';
+import 'package:faddompet/l10n/app_language.dart';
 
 void main() {
   test('plain values from older versions keep working', () {
@@ -50,6 +51,19 @@ void main() {
     expect(
       ThemePreference.parse('system+nolabels').summary,
       'Ikuti perangkat • tanpa label menu',
+    );
+  });
+
+  test('language flag selects English and round trips', () {
+    final parsed = ThemePreference.parse('dark+dynamic+en');
+
+    expect(parsed.language, AppLanguage.english);
+    expect(parsed.encode(), 'dark+dynamic+en');
+    expect(ThemePreference.parse('dark').language, AppLanguage.indonesian);
+    expect(
+      ThemePreference.parse('system').copyWith(language: AppLanguage.english)
+          .encode(),
+      'system+en',
     );
   });
 }

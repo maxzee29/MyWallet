@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../l10n/tr.dart';
+import '../../l10n/app_text.dart';
 import '../../app/providers/app_providers.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
@@ -60,7 +62,7 @@ class SettingsPage extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xxl),
           _SettingsTile(
             icon: Icons.dark_mode_rounded,
-            title: 'Tampilan',
+            title: 'Tampilan & Bahasa',
             subtitle: ThemePreference.parse(settings?.themeMode).summary,
             onTap: () => _showThemeSheet(context),
           ),
@@ -979,10 +981,10 @@ class _PinTextField extends StatelessWidget {
       maxLength: 6,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
+        labelText: tr(label),
+        hintText: tr(hint),
         counterText: '',
-        helperText: 'PIN hanya tersimpan aman di perangkat ini.',
+        helperText: tr('PIN hanya tersimpan aman di perangkat ini.'),
       ),
     );
   }
@@ -1029,9 +1031,9 @@ class _ResetDialogState extends State<_ResetDialog> {
             controller: _controller,
             textCapitalization: TextCapitalization.characters,
             decoration: const InputDecoration(
-              labelText: 'Ketik RESET',
-              hintText: 'RESET',
-              helperText: 'Cadangkan data terlebih dahulu jika perlu.',
+              labelText: tr('Ketik RESET'),
+              hintText: tr('RESET'),
+              helperText: tr('Cadangkan data terlebih dahulu jika perlu.'),
             ),
             onChanged: (_) => setState(() {}),
           ),
@@ -1381,17 +1383,17 @@ class _CategoryDialogState extends State<_CategoryDialog> {
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: 'Nama kategori',
-                hintText: 'Contoh: Makanan',
-                helperText: 'Pakai nama yang singkat dan mudah dikenali.',
+                labelText: tr('Nama kategori'),
+                hintText: tr('Contoh: Makanan'),
+                helperText: tr('Pakai nama yang singkat dan mudah dikenali.'),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
             TextField(
               controller: _groupController,
               decoration: const InputDecoration(
-                labelText: 'Grup',
-                hintText: 'Contoh: Kebutuhan Harian',
+                labelText: tr('Grup'),
+                hintText: tr('Contoh: Kebutuhan Harian'),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),

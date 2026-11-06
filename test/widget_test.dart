@@ -35,8 +35,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('Total Saldo'), findsOneWidget);
-    expect(find.text('Ringkasan bulan ini'), findsOneWidget);
+    expect(find.text('TOTAL SALDO'), findsOneWidget);
+    expect(find.text('Bulan ini'), findsOneWidget);
     expect(find.text('Riwayat Transaksi'), findsOneWidget);
   });
 }

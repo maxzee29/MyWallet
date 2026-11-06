@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/tr.dart';
+import '../../l10n/app_text.dart';
 import '../../app/providers/app_providers.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
@@ -139,9 +141,9 @@ class _NameField extends StatelessWidget {
       controller: controller,
       textInputAction: TextInputAction.next,
       decoration: const InputDecoration(
-        labelText: 'Nama pengguna',
-        hintText: 'Contoh: Rina',
-        helperText: 'Nama ini hanya dipakai untuk menyapa kamu di MyWallet.',
+        labelText: tr('Nama pengguna'),
+        hintText: tr('Contoh: Rina'),
+        helperText: tr('Nama ini hanya dipakai untuk menyapa kamu di MyWallet.'),
       ),
     );
   }
@@ -187,9 +189,9 @@ class _InitialBalanceField extends StatelessWidget {
               textAlign: TextAlign.end,
               inputFormatters: const [RupiahInputFormatter()],
               decoration: const InputDecoration(
-                labelText: 'Saldo awal',
-                hintText: 'Rp0',
-                helperText: 'Opsional',
+                labelText: tr('Saldo awal'),
+                hintText: tr('Rp0'),
+                helperText: tr('Opsional'),
                 isDense: true,
               ),
             ),

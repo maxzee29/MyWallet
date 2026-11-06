@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/tr.dart';
+import '../../l10n/app_text.dart';
 import '../../app/theme/app_accent.dart';
 import '../../app/providers/app_providers.dart';
 import '../../app/theme/app_colors.dart';
@@ -678,7 +680,7 @@ class _AdminFeeField extends StatelessWidget {
           cursorColor: theme.colorScheme.primary,
           style: theme.textTheme.bodyLarge,
           decoration: InputDecoration(
-            prefixText: 'Rp ',
+            prefixText: tr('Rp '),
             hintText: '0',
             hintStyle: theme.textTheme.bodyMedium,
             filled: true,
@@ -915,7 +917,7 @@ class _TitleField extends StatelessWidget {
       style: theme.textTheme.bodyLarge,
       decoration: InputDecoration(
         counterText: '',
-        hintText: 'Judul (mis. Makan siang)',
+        hintText: tr('Judul (mis. Makan siang)'),
         hintStyle: theme.textTheme.bodyMedium,
         prefixIcon: Icon(
           Icons.edit_note_rounded,

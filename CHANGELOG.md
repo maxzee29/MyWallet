@@ -2,6 +2,12 @@
 
 All notable changes to FadDompet are documented in this file.
 
+## [1.4.4]
+
+- Redesigned the dashboard: greeting with date and initial avatar, a green total balance card with the month's spending and a wallet shortcut, and a month card with budget progress, spent and left amounts, and a safe-to-spend-today amount.
+- Added English as an app language. Choose it in Pengaturan -> Tampilan & Bahasa. Static texts, dates and generated sentences are translated; notes and names you typed stay as written.
+- Bumped the app version to 1.4.4.
+
 ## [1.4.3]
 
 - Added a Material You option in Tampilan: accent colors follow the Android 12+ wallpaper palette. Surfaces and income/expense colors keep the app palette.

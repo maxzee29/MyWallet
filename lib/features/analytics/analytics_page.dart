@@ -1,8 +1,10 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/tr.dart';
+import '../../l10n/app_text.dart';
 import '../../app/theme/app_accent.dart';
 import '../../app/providers/app_providers.dart';
 import '../../app/theme/app_colors.dart';
@@ -1027,9 +1029,9 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                     isExpanded: true,
                     initialValue: _categoryId,
                     decoration: const InputDecoration(
-                      labelText: 'Cakupan',
+                      labelText: tr('Cakupan'),
                       helperText:
-                          'Pilih budget bulanan atau kategori tertentu.',
+                          tr('Pilih budget bulanan atau kategori tertentu.'),
                     ),
                     onChanged: editing
                         ? null
@@ -1065,10 +1067,10 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                     keyboardType: TextInputType.number,
                     inputFormatters: const [RupiahInputFormatter()],
                     decoration: InputDecoration(
-                      labelText: 'Batas budget',
-                      hintText: 'Rp500.000',
-                      helperText: 'Masukkan batas pengeluaran bulan ini.',
-                      errorText: _error,
+                      labelText: tr('Batas budget'),
+                      hintText: tr('Rp500.000'),
+                      helperText: tr('Masukkan batas pengeluaran bulan ini.'),
+                      errorText: _error == null ? null : tr(_error!),
                     ),
                     onChanged: (_) {
                       if (_error != null) {

@@ -413,7 +413,7 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
         children: [
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: tr('Nama dompet'),
               hintText: tr('Contoh: Tunai'),
               helperText: tr('Gunakan nama yang mudah kamu kenali.'),

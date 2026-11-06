@@ -1030,7 +1030,7 @@ class _ResetDialogState extends State<_ResetDialog> {
           TextField(
             controller: _controller,
             textCapitalization: TextCapitalization.characters,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: tr('Ketik RESET'),
               hintText: tr('RESET'),
               helperText: tr('Cadangkan data terlebih dahulu jika perlu.'),
@@ -1382,7 +1382,7 @@ class _CategoryDialogState extends State<_CategoryDialog> {
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: tr('Nama kategori'),
                 hintText: tr('Contoh: Makanan'),
                 helperText: tr('Pakai nama yang singkat dan mudah dikenali.'),
@@ -1391,7 +1391,7 @@ class _CategoryDialogState extends State<_CategoryDialog> {
             const SizedBox(height: AppSpacing.lg),
             TextField(
               controller: _groupController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: tr('Grup'),
                 hintText: tr('Contoh: Kebutuhan Harian'),
               ),

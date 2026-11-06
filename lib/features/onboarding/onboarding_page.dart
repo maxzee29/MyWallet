@@ -140,7 +140,7 @@ class _NameField extends StatelessWidget {
     return TextField(
       controller: controller,
       textInputAction: TextInputAction.next,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: tr('Nama pengguna'),
         hintText: tr('Contoh: Rina'),
         helperText: tr('Nama ini hanya dipakai untuk menyapa kamu di MyWallet.'),
@@ -188,7 +188,7 @@ class _InitialBalanceField extends StatelessWidget {
               keyboardType: TextInputType.number,
               textAlign: TextAlign.end,
               inputFormatters: const [RupiahInputFormatter()],
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: tr('Saldo awal'),
                 hintText: tr('Rp0'),
                 helperText: tr('Opsional'),

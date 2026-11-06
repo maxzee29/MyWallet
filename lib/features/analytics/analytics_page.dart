@@ -1028,7 +1028,7 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                   DropdownButtonFormField<int?>(
                     isExpanded: true,
                     initialValue: _categoryId,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: tr('Cakupan'),
                       helperText:
                           tr('Pilih budget bulanan atau kategori tertentu.'),

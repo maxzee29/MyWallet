@@ -7,8 +7,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../l10n/tr.dart';
 import '../../l10n/app_text.dart';
 import '../../app/providers/app_providers.dart';
+import '../../app/theme/app_accent.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
+import '../../app/theme/app_shadows.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/theme_preference.dart';
 import '../../core/enums/category_type.dart';
@@ -59,7 +61,17 @@ class SettingsPage extends ConsumerWidget {
         ),
         children: [
           Text('Pengaturan', style: theme.textTheme.displayMedium),
+          const SizedBox(height: AppSpacing.xl),
+          _SettingsBanner(
+            title: 'MyWallet',
+            subtitle: aboutSubtitle,
+            onTap: () => _showAboutSheet(context, versionLabel),
+          ),
           const SizedBox(height: AppSpacing.xxl),
+          const _SectionLabel('Preferensi'),
+          const SizedBox(height: AppSpacing.md),
+          _SettingsGroup(
+            children: [
           _SettingsTile(
             icon: Icons.dark_mode_rounded,
             title: 'Tampilan & Bahasa',
@@ -79,16 +91,6 @@ class SettingsPage extends ConsumerWidget {
             ),
           ),
           _SettingsTile(
-            icon: Icons.insights_rounded,
-            title: 'Analitik & Budget',
-            subtitle: 'Lihat grafik dan atur budget bulanan',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (context) => const Scaffold(body: AnalyticsPage()),
-              ),
-            ),
-          ),
-          _SettingsTile(
             icon: Icons.lock_rounded,
             title: 'Keamanan',
             subtitle: kIsWeb
@@ -104,6 +106,25 @@ class SettingsPage extends ConsumerWidget {
                   )
                 : () => _showSecuritySheet(context),
           ),
+          const _SettingsTile(
+            icon: Icons.payments_rounded,
+            title: 'Mata uang',
+            subtitle:
+                'IDR - Rupiah. Pilihan mata uang lain akan tersedia nanti.',
+          ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+          const _SectionLabel('Pengelolaan Data'),
+          const SizedBox(height: AppSpacing.md),
+          _SettingsGroup(
+            children: [
+          _SettingsTile(
+            icon: Icons.category_rounded,
+            title: 'Kategori',
+            subtitle: 'Tambah, edit, atau nonaktifkan kategori',
+            onTap: () => _showCategoriesSheet(context),
+          ),
           _SettingsTile(
             icon: Icons.backup_rounded,
             title: 'Data & Cadangan',
@@ -111,24 +132,36 @@ class SettingsPage extends ConsumerWidget {
             onTap: () => _showBackupSheet(context, ref),
           ),
           _SettingsTile(
-            icon: Icons.category_rounded,
-            title: 'Kategori',
-            subtitle: 'Tambah, edit, atau nonaktifkan kategori',
-            onTap: () => _showCategoriesSheet(context),
-          ),
-          const _SettingsTile(
-            icon: Icons.payments_rounded,
-            title: 'Mata uang',
-            subtitle:
-                'IDR - Rupiah. Pilihan mata uang lain akan tersedia nanti.',
-          ),
-          _SettingsTile(
             icon: Icons.warning_rounded,
-            title: 'Zona Bahaya',
-            subtitle: 'Reset semua data dengan konfirmasi',
+            title: 'Reset Data',
+            subtitle: 'Hapus semua transaksi, dompet, kategori, dan budget.',
             danger: true,
             onTap: () => _confirmReset(context, ref),
           ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+          const _SectionLabel('Fitur Tambahan'),
+          const SizedBox(height: AppSpacing.md),
+          _SettingsGroup(
+            children: [
+          _SettingsTile(
+            icon: Icons.insights_rounded,
+            title: 'Analitik & Budget',
+            subtitle: 'Lihat grafik dan atur budget bulanan',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (context) => const Scaffold(body: AnalyticsPage()),
+              ),
+            ),
+          ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+          const _SectionLabel('Tentang'),
+          const SizedBox(height: AppSpacing.md),
+          _SettingsGroup(
+            children: [
           _SettingsTile(
             icon: Icons.volunteer_activism_rounded,
             title: 'Dukung Pengembangan',
@@ -161,6 +194,8 @@ class SettingsPage extends ConsumerWidget {
             title: 'Tentang MyWallet',
             subtitle: aboutSubtitle,
             onTap: () => _showAboutSheet(context, versionLabel),
+          ),
+            ],
           ),
         ],
       ),
@@ -650,42 +685,211 @@ class _SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.colorScheme.brightness == Brightness.dark;
-    final accent = danger ? AppColors.expenseRed : theme.colorScheme.primary;
+    final accent = danger ? AppColors.expenseRed : context.accent.color;
+    final tint = danger
+        ? AppColors.expenseRed.withValues(alpha: isDark ? 0.18 : 0.10)
+        : (isDark ? accent.withValues(alpha: 0.16) : context.accent.container);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: PressableSurface(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurfaceElevated : AppColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.xl),
-            border: Border.all(
-              color: danger
-                  ? AppColors.expenseRed.withValues(alpha: 0.28)
-                  : isDark
-                  ? AppColors.darkBorderSubtle
-                  : AppColors.borderSubtle,
-            ),
-          ),
-          child: ListTile(
-            leading: Container(
-              width: AppSpacing.iconTileSmall + AppSpacing.xxs,
-              height: AppSpacing.iconTileSmall + AppSpacing.xxs,
+    return PressableSurface(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: _settingsIconSize,
+              height: _settingsIconSize,
               decoration: BoxDecoration(
-                color: accent.withValues(alpha: isDark ? 0.18 : 0.10),
-                borderRadius: BorderRadius.circular(AppRadius.md),
+                color: tint,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
               ),
-              child: Icon(icon, color: accent, size: 21),
+              child: Icon(icon, color: accent, size: 24),
             ),
-            title: Text(title, style: theme.textTheme.titleMedium),
-            subtitle: Text(subtitle),
-            trailing:
-                trailing ??
-                (onTap == null
-                    ? null
-                    : const Icon(Icons.chevron_right_rounded)),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(subtitle, style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+            if (trailing != null) ...[
+              const SizedBox(width: AppSpacing.md),
+              trailing!,
+            ] else if (onTap != null) ...[
+              const SizedBox(width: AppSpacing.md),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+const double _settingsIconSize = 48;
+
+/// Kartu yang mengelompokkan beberapa baris pengaturan dengan garis pemisah.
+class _SettingsGroup extends StatelessWidget {
+  const _SettingsGroup({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final brightness = theme.colorScheme.brightness;
+    final isDark = brightness == Brightness.dark;
+    final border = isDark ? AppColors.darkBorderSubtle : AppColors.borderSubtle;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceElevated : AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.xxl),
+        border: Border.all(color: border),
+        boxShadow: AppShadows.soft(brightness),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (var index = 0; index < children.length; index++) ...[
+            if (index > 0)
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: AppSpacing.lg + _settingsIconSize + AppSpacing.lg,
+                ),
+                child: Divider(height: 1, color: border),
+              ),
+            children[index],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Judul bagian dengan garis aksen di kiri.
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accent = context.accent.color;
+
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 24,
+          decoration: BoxDecoration(
+            color: accent,
+            borderRadius: BorderRadius.circular(AppRadius.full),
           ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Text(
+          label,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: accent,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Kartu berwarna di bagian atas berisi nama aplikasi dan versinya.
+class _SettingsBanner extends StatelessWidget {
+  const _SettingsBanner({
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accent = context.accent;
+
+    return PressableSurface(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [accent.gradientStart, accent.gradientMid],
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.xxl),
+          boxShadow: AppShadows.hero(
+            theme.colorScheme.brightness,
+            tint: accent.gradientStart,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: _settingsIconSize,
+              height: _settingsIconSize,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet_rounded,
+                color: AppColors.onDark,
+                size: 26,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: AppColors.onDark,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.onDarkMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.onDark),
+          ],
         ),
       ),
     );

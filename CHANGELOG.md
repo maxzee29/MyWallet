@@ -7,6 +7,7 @@ All notable changes to FadDompet are documented in this file.
 - Fixed restoring a backup: backups made after changing Material You, language or menu label options were rejected as invalid. The theme setting is now accepted, and unknown values fall back to the default theme.
 - The restore file picker now accepts any file type, ignores a leading byte order mark, and reports a restore failure separately from an invalid file.
 - Added Adjust Balance to a wallet. Enter the actual balance and the difference is recorded as an income or expense in the Balance Adjustment category.
+- Redesigned Settings: an app banner at the top, grouped cards (Preferences, Data Management, Additional Features, About) with icon tiles and dividers, and accent section labels.
 - Bumped the app version to 1.4.5.
 
 ## [1.4.4]

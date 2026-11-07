@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../l10n/tr.dart';
+import '../../app/theme/theme_preference.dart';
 import '../local/database/app_database.dart';
 import '../local/seed/default_seed_data.dart';
 
@@ -85,16 +86,16 @@ class BackupRepository {
   }
 
   Future<BackupImportPreview?> pickImportPreview() async {
-    final file = await FilePicker.pickFile(
-      type: FileType.custom,
-      allowedExtensions: ['json'],
-    );
+    // Semua jenis file boleh dipilih. File cadangan yang dikirim lewat aplikasi
+    // chat sering berganti ekstensi, dan isinya tetap diperiksa di bawah.
+    final file = await FilePicker.pickFile(type: FileType.any);
     if (file == null) {
       return null;
     }
 
     final bytes = await file.readAsBytes();
-    final raw = utf8.decode(bytes);
+    var raw = utf8.decode(bytes);
+    if (raw.startsWith('\uFEFF')) raw = raw.substring(1);
     final payload = _decodeAndValidate(raw);
     return BackupImportPreview(
       payload: payload,
@@ -339,11 +340,9 @@ class BackupRepository {
   void _validateSettings(Map<String, dynamic> item) {
     _optionalString(item, 'user_name');
     _optionalString(item, 'currency');
-    _optionalString(
-      item,
-      'theme_mode',
-      allowed: const {'system', 'light', 'dark'},
-    );
+    // Mode tema bisa memuat penanda tambahan seperti "dark+dynamic", jadi
+    // tidak dibatasi pada tiga nilai saja.
+    _optionalString(item, 'theme_mode');
     _optionalBool(item, 'hide_balance');
     _optionalBool(item, 'onboarding_completed');
   }
@@ -465,7 +464,9 @@ class BackupRepository {
     return AppSettingEntriesCompanion.insert(
       userName: Value(_optionalString(item, 'user_name')),
       currency: Value(_optionalString(item, 'currency') ?? 'IDR'),
-      themeMode: Value(_optionalString(item, 'theme_mode') ?? 'system'),
+      themeMode: Value(
+        ThemePreference.normalize(_optionalString(item, 'theme_mode')),
+      ),
       hideBalance: Value(_optionalBool(item, 'hide_balance') ?? false),
       onboardingCompleted: Value(
         _optionalBool(item, 'onboarding_completed') ?? true,

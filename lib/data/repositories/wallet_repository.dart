@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:drift/drift.dart';
 
+import '../../core/enums/transaction_type.dart';
 import '../../core/helpers/calculation_helper.dart';
 import '../local/database/app_database.dart';
 import 'app_models.dart';
@@ -130,6 +131,88 @@ class WalletRepository {
 
   Future<int> transactionCount(int walletId) {
     return _database.transactionsDao.countByWallet(walletId);
+  }
+
+  /// Menyesuaikan saldo dompet ke [targetBalance]. Selisihnya dicatat sebagai
+  /// transaksi "Penyesuaian Saldo". Mengembalikan selisih bertanda: positif
+  /// untuk pemasukan, negatif untuk pengeluaran, dan 0 jika saldo sudah sesuai.
+  Future<int> adjustBalance({
+    required int walletId,
+    required int targetBalance,
+  }) async {
+    if (targetBalance < 0) {
+      throw ArgumentError('Saldo tidak boleh negatif.');
+    }
+
+    return _database.transaction(() async {
+      final now = DateTime.now();
+      final wallets = await _database.walletsDao.getAll();
+      WalletEntry? wallet;
+      for (final item in wallets) {
+        if (item.id == walletId) wallet = item;
+      }
+      if (wallet == null) {
+        throw ArgumentError('Dompet tidak ditemukan.');
+      }
+
+      final transactions = await _database.transactionsDao.getAll();
+      final current = CalculationHelper.walletBalance(
+        walletId: wallet.id,
+        initialBalance: wallet.initialBalance,
+        transactions: transactions.map(
+          (transaction) => (
+            walletId: transaction.walletId,
+            transferWalletId: transaction.transferWalletId,
+            type: transaction.type,
+            amount: transaction.amount,
+          ),
+        ),
+      );
+
+      final difference = targetBalance - current;
+      if (difference == 0) return 0;
+
+      final type = difference > 0
+          ? TransactionType.income
+          : TransactionType.expense;
+      final categoryId = await _adjustmentCategoryId(type, now);
+      await _database.transactionsDao.add(
+        TransactionEntriesCompanion(
+          type: Value(type.value),
+          amount: Value(difference.abs()),
+          categoryId: Value(categoryId),
+          walletId: Value(wallet.id),
+          date: Value(now),
+          note: const Value('Penyesuaian saldo'),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+      return difference;
+    });
+  }
+
+  Future<int> _adjustmentCategoryId(TransactionType type, DateTime now) async {
+    final categories = await _database.categoriesDao.getAll();
+    for (final category in categories) {
+      if (category.name == 'Penyesuaian Saldo' &&
+          category.type == type.value &&
+          !category.isArchived) {
+        return category.id;
+      }
+    }
+
+    return _database.categoriesDao.add(
+      CategoryEntriesCompanion.insert(
+        name: 'Penyesuaian Saldo',
+        type: type.value,
+        groupName: 'Lainnya',
+        iconKey: 'adjustment',
+        colorValue: 0xFF64748B,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
   }
 
   Future<void> setArchived(WalletEntry wallet, bool value) async {

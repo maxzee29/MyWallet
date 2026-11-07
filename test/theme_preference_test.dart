@@ -66,4 +66,15 @@ void main() {
       'system+en',
     );
   });
+
+  test('normalize keeps valid theme values from backups', () {
+    expect(ThemePreference.normalize('dark+dynamic+nolabels+en'), 'dark+dynamic+nolabels+en');
+    expect(ThemePreference.normalize('light'), 'light');
+  });
+
+  test('normalize falls back to system for unknown values', () {
+    expect(ThemePreference.normalize(null), 'system');
+    expect(ThemePreference.normalize('sepia'), 'system');
+    expect(ThemePreference.normalize('dark+unknown'), 'dark');
+  });
 }

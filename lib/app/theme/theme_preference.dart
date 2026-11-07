@@ -49,6 +49,10 @@ class ThemePreference {
     );
   }
 
+  /// Merapikan teks tema dari sumber luar, misalnya file cadangan. Nilai yang
+  /// tidak dikenal menjadi `system`, dan penanda yang tidak dikenal dibuang.
+  static String normalize(String? value) => ThemePreference.parse(value).encode();
+
   /// Teks yang disimpan ke database.
   String encode() {
     final base = switch (mode) {

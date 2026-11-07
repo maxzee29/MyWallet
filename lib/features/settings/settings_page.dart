@@ -455,11 +455,18 @@ class SettingsPage extends ConsumerWidget {
         'Data berhasil dipulihkan.',
         type: TopToastType.success,
       );
-    } catch (_) {
+    } on FormatException {
       if (!context.mounted) return;
       TopToast.show(
         context,
         'File cadangan tidak valid.',
+        type: TopToastType.warning,
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      TopToast.show(
+        context,
+        'Data belum bisa dipulihkan. Coba lagi.',
         type: TopToastType.warning,
       );
     }

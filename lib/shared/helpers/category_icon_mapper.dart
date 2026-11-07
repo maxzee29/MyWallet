@@ -142,6 +142,8 @@ IconData? _iconByKey(String key) {
       return Icons.outbound_rounded;
     case 'admin-fee':
       return Icons.account_balance_wallet_rounded;
+    case 'adjustment':
+      return Icons.tune_rounded;
     case 'donation':
       return Icons.volunteer_activism_rounded;
     case 'debt-paid':

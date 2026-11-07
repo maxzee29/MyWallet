@@ -186,6 +186,20 @@ class WalletsPage extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xl),
+                    if (!wallet.wallet.isArchived) ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(sheetContext);
+                            _adjustBalance(context, ref, wallet);
+                          },
+                          icon: const Icon(Icons.tune_rounded),
+                          label: const Text('Sesuaikan Saldo'),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
                     AppFormActions(
                       secondaryLabel: 'Edit',
                       primaryLabel: wallet.wallet.isArchived
@@ -217,6 +231,39 @@ class WalletsPage extends ConsumerWidget {
         );
       },
     );
+  }
+
+  Future<void> _adjustBalance(
+    BuildContext context,
+    WidgetRef ref,
+    WalletBalance wallet,
+  ) async {
+    final target = await showDialog<int>(
+      context: context,
+      builder: (context) => _AdjustBalanceDialog(wallet: wallet),
+    );
+    if (target == null) return;
+
+    try {
+      final difference = await ref
+          .read(walletRepositoryProvider)
+          .adjustBalance(walletId: wallet.wallet.id, targetBalance: target);
+      if (!context.mounted) return;
+      TopToast.show(
+        context,
+        difference == 0
+            ? 'Saldo sudah sesuai.'
+            : 'Saldo berhasil disesuaikan.',
+        type: TopToastType.success,
+      );
+    } on ArgumentError catch (error) {
+      if (!context.mounted) return;
+      TopToast.show(
+        context,
+        error.message.toString(),
+        type: TopToastType.warning,
+      );
+    }
   }
 
   Future<void> _deleteWallet(
@@ -468,6 +515,87 @@ class _WalletFormDialogState extends State<_WalletFormDialog> {
               ),
             );
           },
+        ),
+      ],
+    );
+  }
+}
+
+class _AdjustBalanceDialog extends StatefulWidget {
+  const _AdjustBalanceDialog({required this.wallet});
+
+  final WalletBalance wallet;
+
+  @override
+  State<_AdjustBalanceDialog> createState() => _AdjustBalanceDialogState();
+}
+
+class _AdjustBalanceDialogState extends State<_AdjustBalanceDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: CurrencyFormatter.rupiah(widget.wallet.balance),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  int get _target => CurrencyFormatter.parseRupiah(_controller.text);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final difference = _target - widget.wallet.balance;
+    final info = difference == 0
+        ? 'Tidak ada selisih, saldo sudah sesuai.'
+        : difference > 0
+        ? 'Akan dicatat sebagai pemasukan ${CurrencyFormatter.rupiah(difference)}'
+        : 'Akan dicatat sebagai pengeluaran ${CurrencyFormatter.rupiah(-difference)}';
+
+    return AlertDialog(
+      title: const Text('Sesuaikan Saldo'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.wallet.wallet.name, style: theme.textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Saldo saat ini ${CurrencyFormatter.rupiah(widget.wallet.balance)}',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            keyboardType: TextInputType.number,
+            inputFormatters: const [RupiahInputFormatter()],
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              labelText: tr('Saldo sebenarnya'),
+              hintText: tr('Rp0'),
+              helperText: tr(
+                'Masukkan jumlah uang yang sebenarnya ada di dompet ini.',
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(info, style: theme.textTheme.labelMedium),
+        ],
+      ),
+      actions: [
+        AppFormActions(
+          secondaryLabel: 'Batal',
+          primaryLabel: 'Sesuaikan',
+          onSecondaryPressed: () => Navigator.pop(context),
+          onPrimaryPressed: () => Navigator.pop(context, _target),
         ),
       ],
     );

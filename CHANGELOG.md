@@ -2,6 +2,13 @@
 
 All notable changes to FadDompet are documented in this file.
 
+## [1.4.5]
+
+- Fixed restoring a backup: backups made after changing Material You, language or menu label options were rejected as invalid. The theme setting is now accepted, and unknown values fall back to the default theme.
+- The restore file picker now accepts any file type, ignores a leading byte order mark, and reports a restore failure separately from an invalid file.
+- Added Adjust Balance to a wallet. Enter the actual balance and the difference is recorded as an income or expense in the Balance Adjustment category.
+- Bumped the app version to 1.4.5.
+
 ## [1.4.4]
 
 - Redesigned the dashboard: greeting with date and initial avatar, a green total balance card with the month's spending and a wallet shortcut, and a month card with budget progress, spent and left amounts, and a safe-to-spend-today amount.

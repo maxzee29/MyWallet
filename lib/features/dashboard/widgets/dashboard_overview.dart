@@ -85,20 +85,28 @@ class DashboardGreeting extends StatelessWidget {
   }
 }
 
-/// Kartu hijau berisi total saldo, pengeluaran bulan ini, dan jumlah dompet.
+/// Kartu hijau berisi total saldo, jumlah dompet, dan uang masuk, keluar,
+/// serta selisihnya pada bulan ini.
 class DashboardBalanceCard extends StatelessWidget {
   const DashboardBalanceCard({
     super.key,
     required this.totalBalance,
+    required this.monthlyIncome,
     required this.monthlyExpense,
+    required this.netCashflow,
     required this.walletCount,
     required this.hideBalance,
     required this.onToggleVisibility,
     this.onOpenWallets,
   });
 
+  static const Color _inflowColor = Color(0xFF86EFAC);
+  static const Color _outflowColor = Color(0xFFFCA5A5);
+
   final int totalBalance;
+  final int monthlyIncome;
   final int monthlyExpense;
+  final int netCashflow;
   final int walletCount;
   final bool hideBalance;
   final VoidCallback onToggleVisibility;
@@ -132,6 +140,8 @@ class DashboardBalanceCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'TOTAL SALDO',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: AppColors.onDarkMuted,
                     letterSpacing: 1.2,
@@ -139,77 +149,13 @@ class DashboardBalanceCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Semantics(
-                button: true,
-                label: hideBalance ? 'Tampilkan saldo' : 'Sembunyikan saldo',
-                child: GestureDetector(
-                  onTap: onToggleVisibility,
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xs),
-                    child: Icon(
-                      hideBalance
-                          ? Icons.visibility_off_rounded
-                          : Icons.visibility_rounded,
-                      color: AppColors.onDarkMuted,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              CurrencyFormatter.rupiah(totalBalance, hidden: hideBalance),
-              maxLines: 1,
-              style: theme.textTheme.displayMedium?.copyWith(
-                color: AppColors.onDark,
-                fontWeight: FontWeight.w900,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Row(
-            children: [
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Pengeluaran bulan ini',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: AppColors.onDarkMuted,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        CurrencyFormatter.rupiah(
-                          monthlyExpense,
-                          hidden: hideBalance,
-                        ),
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: AppColors.onDark,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.sm),
               PressableSurface(
                 onTap: onOpenWallets,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.18),
@@ -234,7 +180,131 @@ class DashboardBalanceCard extends StatelessWidget {
                   ),
                 ),
               ),
+              Semantics(
+                button: true,
+                label: hideBalance ? 'Tampilkan saldo' : 'Sembunyikan saldo',
+                child: GestureDetector(
+                  onTap: onToggleVisibility,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    child: Icon(
+                      hideBalance
+                          ? Icons.visibility_off_rounded
+                          : Icons.visibility_rounded,
+                      color: AppColors.onDarkMuted,
+                    ),
+                  ),
+                ),
+              ),
             ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              CurrencyFormatter.rupiah(totalBalance, hidden: hideBalance),
+              maxLines: 1,
+              style: theme.textTheme.displayMedium?.copyWith(
+                color: AppColors.onDark,
+                fontWeight: FontWeight.w900,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          Row(
+            children: [
+              Expanded(
+                child: _FlowTile(
+                  label: 'Uang masuk',
+                  value: CurrencyFormatter.rupiah(
+                    monthlyIncome,
+                    hidden: hideBalance,
+                  ),
+                  color: _inflowColor,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _FlowTile(
+                  label: 'Uang keluar',
+                  value: CurrencyFormatter.rupiah(
+                    monthlyExpense,
+                    hidden: hideBalance,
+                  ),
+                  color: _outflowColor,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _FlowTile(
+                  label: 'Selisih',
+                  value: CurrencyFormatter.rupiah(
+                    netCashflow,
+                    hidden: hideBalance,
+                  ),
+                  color: netCashflow < 0 ? _outflowColor : _inflowColor,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FlowTile extends StatelessWidget {
+  const _FlowTile({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: AppColors.onDarkMuted,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w900,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
           ),
         ],
       ),

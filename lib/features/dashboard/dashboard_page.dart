@@ -45,7 +45,9 @@ class DashboardPage extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.xl),
                     DashboardBalanceCard(
                       totalBalance: data.totalBalance,
+                      monthlyIncome: data.monthlyIncome,
                       monthlyExpense: data.monthlyExpense,
+                      netCashflow: data.netCashflow,
                       walletCount: data.walletCount,
                       hideBalance: hideBalance,
                       onToggleVisibility: () {
